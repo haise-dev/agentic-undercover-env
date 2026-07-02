@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+tests/
+Dockerfile
+docker-compose*
+.git
+.gitignore
