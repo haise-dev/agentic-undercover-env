@@ -123,6 +123,34 @@ class RedisClient:
             logger.error("Redis delete failed for keys %s: %s", keys, exc)
             raise RedisConnectionError(f"Redis delete error: {exc}") from exc
 
+    async def rpush(self, key: str, *values: str) -> int:
+        """Pushes values to the end of a list. Returns length of list."""
+        if not values:
+            return 0
+        try:
+            return await self.raw.rpush(key, *values)
+        except (RedisConnectionError, OSError) as exc:
+            logger.error("Redis rpush failed for key %s: %s", key, exc)
+            raise RedisConnectionError(f"Redis rpush error: {exc}") from exc
+
+    async def lrange(self, key: str, start: int = 0, end: int = -1) -> list[str]:
+        """Returns a range of elements from the list stored at key."""
+        try:
+            vals = await self.raw.lrange(key, start, end)
+            return [v.decode("utf-8") if isinstance(v, bytes) else str(v) for v in vals]
+        except (RedisConnectionError, OSError) as exc:
+            logger.error("Redis lrange failed for key %s: %s", key, exc)
+            raise RedisConnectionError(f"Redis lrange error: {exc}") from exc
+
+    async def expire(self, key: str, time: int) -> bool:
+        """Sets a timeout on key."""
+        try:
+            return await self.raw.expire(key, time)
+        except (RedisConnectionError, OSError) as exc:
+            logger.error("Redis expire failed for key %s: %s", key, exc)
+            raise RedisConnectionError(f"Redis expire error: {exc}") from exc
+
+
 
 def create_redis_pool(url: str, max_connections: int = 20) -> aioredis.ConnectionPool:
     """

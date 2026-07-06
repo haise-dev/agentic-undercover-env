@@ -67,7 +67,7 @@ class ActionLogORM(Base):
         ForeignKey("episodes.id", ondelete="CASCADE"),
         nullable=False,
     )
-    agent_id: Mapped[str] = mapped_column(VARCHAR(20), nullable=False)
+    agent_id: Mapped[str] = mapped_column(VARCHAR(36), nullable=False)
     phase: Mapped[str] = mapped_column(VARCHAR(20), nullable=False)
     round_number: Mapped[int] = mapped_column(INT, nullable=False)
     deliberation_round: Mapped[int | None] = mapped_column(INT, nullable=True)

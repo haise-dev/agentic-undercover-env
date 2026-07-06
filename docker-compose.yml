@@ -43,6 +43,8 @@ services:
     volumes:
       - ./apps/api/src:/app/src
       - ./apps/api/tests:/app/tests
+      - ./apps/api/alembic:/app/alembic
+      - ./apps/api/alembic.ini:/app/alembic.ini
     env_file:
       - .env
     environment:
@@ -63,9 +65,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./apps/web/app:/app/app
-      - ./apps/web/src:/app/src
-      - ./apps/web/public:/app/public
+      - ./apps/web:/app
+      - /app/node_modules
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
     depends_on:

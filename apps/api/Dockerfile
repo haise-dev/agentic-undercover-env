@@ -6,7 +6,7 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 EXPOSE 8000
-CMD [".venv/bin/uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["sh", "-c", ".venv/bin/alembic upgrade head && .venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"]
 
 # Stage 1: Build virtual environment
 FROM ghcr.io/astral-sh/uv:python3.11-alpine AS builder
@@ -19,6 +19,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Copy project files
 COPY src/ /app/src/
+COPY alembic/ /app/alembic/
+COPY alembic.ini /app/alembic.ini
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
@@ -28,4 +30,4 @@ WORKDIR /app
 COPY --from=builder /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"]

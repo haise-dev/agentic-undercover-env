@@ -76,24 +76,24 @@ async def init_node(config: EpisodeConfig, emitter: EventEmitter) -> GameState:
     # Step 5: Emit GAME_START event
     await emitter.emit(
         EVT_GAME_START,
-        _build_game_start_payload(config, turn_order),
+        _build_game_start_payload(config, turn_order, role_assignments),
     )
 
     return state
 
 
 def _build_game_start_payload(
-    config: EpisodeConfig, turn_order: list[str]
+    config: EpisodeConfig, turn_order: list[str], role_assignments: dict
 ) -> dict:
     """
     Builds the GAME_START event payload.
-    Deliberately excludes roles and secret_word to avoid spoilers for observers.
+    Includes roles so the human observer can follow the game.
 
     Fields:
       - episode_id: str
-      - topic: str          # Category label ("Fruit"), NOT the secret word
-      - agents: list[dict]  # display info only — no role/secret
-      - turn_order: list[str]  # initial speaking order for Round 1
+      - topic: str
+      - agents: list[dict]
+      - turn_order: list[str]
     """
     return {
         "episode_id": config.episode_id,
@@ -104,6 +104,8 @@ def _build_game_start_payload(
                 "display_name": agent.display_name,
                 "display_color": agent.display_color,
                 "agent_type": agent.agent_type,
+                "role": role_assignments[agent.agent_id].role.value,
+                "secret_word": role_assignments[agent.agent_id].secret_word,
             }
             for agent in config.agents
         ],

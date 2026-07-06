@@ -10,6 +10,7 @@
   --color-bg-secondary: #18181b;
   --color-bg-card:      #1c1c20;
   --color-border:       #27272a;
+  --color-border-hover: #3f3f46;
   --color-text-primary: #fafafa;
   --color-text-muted:   #71717a;
 }
@@ -26,8 +27,15 @@
   --color-bg-secondary: var(--color-bg-secondary);
   --color-bg-card: var(--color-bg-card);
   --color-border: var(--color-border);
+  --color-border-hover: var(--color-border-hover);
   --color-text-primary: var(--color-text-primary);
   --color-text-muted: var(--color-text-muted);
+
+  /* Shadows for glow effects */
+  --shadow-glow-0: 0 0 15px -3px rgba(34, 211, 238, 0.4);
+  --shadow-glow-1: 0 0 15px -3px rgba(232, 121, 249, 0.4);
+  --shadow-glow-2: 0 0 15px -3px rgba(251, 191, 36, 0.4);
+  --shadow-glow-3: 0 0 15px -3px rgba(52, 211, 153, 0.4);
 }
 
 body {

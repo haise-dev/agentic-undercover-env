@@ -67,6 +67,9 @@ class ContextBuilder:
             else None
         )
 
+        all_agent_names = ", ".join(agent.display_name for agent in state.config.agents)
+        game_language = state.config.game_language if hasattr(state.config, 'game_language') else "English"
+
         return RoundContext(
             role_assignment=role_assignment,
             current_phase=state.current_phase,
@@ -75,6 +78,8 @@ class ContextBuilder:
             public_history=public_history,
             announcements=state.all_announcements,
             alive_agents=alive_agents,
+            all_agent_names=all_agent_names,
+            game_language=game_language,
             is_final_round=is_final_round,
         )
 

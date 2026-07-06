@@ -35,4 +35,6 @@ class RoundContext(BaseModel):
     public_history: list[PublicMessage]
     announcements: list[SystemAnnouncement]
     alive_agents: list[dict[str, str]]
+    all_agent_names: str
+    game_language: str
     is_final_round: bool = False
