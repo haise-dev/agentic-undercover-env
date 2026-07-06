@@ -3,11 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from redis.exceptions import ConnectionError as RedisConnectionError
 
+from src.api.routes import api_router
+from src.api.ws import ws_router
 from src.core.config import settings
 from src.core.logging import configure_logging, get_logger, log_startup_status
 from src.core.redis import get_redis_client
-from src.api.routes import api_router
-from src.api.ws import ws_router
 
 logger = get_logger("aue.startup")
 

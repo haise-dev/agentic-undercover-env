@@ -28,7 +28,9 @@ class AIAgent(BaseAgent):
     Uses .with_structured_output() for Pydantic parsing and robust retry logic.
     """
 
-    def __init__(self, config: AgentConfig, role_assignment: AgentRoleAssignment) -> None:
+    def __init__(
+        self, config: AgentConfig, role_assignment: AgentRoleAssignment
+    ) -> None:
         super().__init__(config, role_assignment)
         if not config.llm_config:
             raise ValueError("AIAgent requires an AgentLLMConfig")
@@ -61,7 +63,7 @@ class AIAgent(BaseAgent):
         self, phase: Phase, context: RoundContext, output_schema: type, **kwargs
     ) -> any:
         """Helper to invoke LLM with structured output, retries, and record ActionLog."""
-        
+
         # 1. Build System Prompt
         system_prompt_str = build_system_prompt(
             role_assignment=self.role_assignment,
@@ -69,30 +71,30 @@ class AIAgent(BaseAgent):
             agent_names_list=context.all_agent_names,
             game_language=context.game_language,
         )
-        
+
         # 2. Build User Prompt
         user_prompt_str = build_user_prompt(
             phase=phase,
             context=context,
             current_agent_name=self.config.display_name,
-            **kwargs
+            **kwargs,
         )
-        
+
         messages = [
             SystemMessage(content=system_prompt_str),
-            HumanMessage(content=user_prompt_str)
+            HumanMessage(content=user_prompt_str),
         ]
-        
+
         # 3. Setup chain with schema
         chain = self._llm.with_structured_output(output_schema)
-        
+
         start_time = time.perf_counter()
-        
+
         # 4. Invoke with retry
         result = await invoke_with_retry(chain, messages, self.config.agent_id, phase)
-        
+
         latency_ms = int((time.perf_counter() - start_time) * 1000)
-        
+
         # 5. Log action
         log = self._create_action_log(
             phase=phase,
@@ -101,7 +103,7 @@ class AIAgent(BaseAgent):
             latency_ms=latency_ms,
         )
         self.action_logs.append(log)
-        
+
         return result
 
     async def speak(self, context: RoundContext) -> SpeakingOutput:

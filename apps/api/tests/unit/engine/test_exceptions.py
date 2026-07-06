@@ -26,3 +26,12 @@ def test_agent_output_error():
     assert err.phase == "speaking"
     assert err.node_name == "speaking_node"
     assert err.episode_id == "abc"
+
+
+def test_rate_limit_error():
+    from src.engine import RateLimitError
+    err = RateLimitError("Rate limit exceeded", provider="openai", episode_id="abc")
+    assert isinstance(err, EngineError)
+    assert err.provider == "openai"
+    assert err.episode_id == "abc"
+

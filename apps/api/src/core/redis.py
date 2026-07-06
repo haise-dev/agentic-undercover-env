@@ -151,7 +151,6 @@ class RedisClient:
             raise RedisConnectionError(f"Redis expire error: {exc}") from exc
 
 
-
 def create_redis_pool(url: str, max_connections: int = 20) -> aioredis.ConnectionPool:
     """
     Creates a Redis connection pool from a URL.

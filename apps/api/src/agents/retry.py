@@ -1,5 +1,5 @@
 import logging
-import httpx
+
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import BaseMessage, HumanMessage
 from pydantic import BaseModel, ValidationError
@@ -65,9 +65,7 @@ async def invoke_with_retry(
                     logger.info(
                         f"Semantic error for agent {agent_id} in {phase}. Retrying. Error: {e}"
                     )
-                    error_msg = (
-                        f"Your previous output failed validation. Please fix the following errors:\n{e}"
-                    )
+                    error_msg = f"Your previous output failed validation. Please fix the following errors:\n{e}"
                     messages.append(HumanMessage(content=error_msg))
                     continue
                 else:

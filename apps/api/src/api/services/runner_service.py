@@ -28,7 +28,7 @@ async def _run_episode_safe(episode_id: str, config: EpisodeConfig) -> None:
                     agent_id=agent_config.agent_id,
                     role=Role.VILLAGER,
                     secret_word="dummy",
-                    topic="dummy"
+                    topic="dummy",
                 )
                 agents[agent_config.agent_id] = AIAgent(agent_config, dummy_role)
 

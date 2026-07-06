@@ -110,9 +110,9 @@ async def test_init_node_gamestate_fields(episode_config, mock_emitter):
     assert "+00:00" in state.started_at or state.started_at.endswith("Z")
 
 
-def test_build_game_start_payload(episode_config):
+def test_build_game_start_payload(episode_config, role_assignments):
     turn_order = ["agent_3", "agent_1", "agent_0", "agent_2"]
-    payload = _build_game_start_payload(episode_config, turn_order)
+    payload = _build_game_start_payload(episode_config, turn_order, role_assignments)
 
     assert payload["episode_id"] == episode_config.episode_id
     assert payload["topic"] == episode_config.topic
@@ -120,10 +120,10 @@ def test_build_game_start_payload(episode_config):
     assert payload["turn_order"] == turn_order
 
     payload_str = json.dumps(payload)
-    # Leak check
-    assert episode_config.secret_word not in payload_str
-    assert "imposter" not in payload_str.lower()
-    assert "villager" not in payload_str.lower()
+    # Observer needs to see the roles and secret word
+    assert episode_config.secret_word in payload_str
+    assert "imposter" in payload_str.lower()
+    assert "villager" in payload_str.lower()
 
     assert len(payload["agents"]) == 4
     for _i, agent in enumerate(payload["agents"]):
@@ -131,6 +131,8 @@ def test_build_game_start_payload(episode_config):
         assert "display_name" in agent
         assert "display_color" in agent
         assert "agent_type" in agent
+        assert "role" in agent
+        assert "secret_word" in agent
 
 
 # --- Event emission integration tests (S2) ---
@@ -169,8 +171,8 @@ async def test_init_node_event_emission_integration(
     assert payload["topic"] == episode_config.topic
     assert payload["turn_order"] == state.current_turn_order
 
-    # Validate leak guards
+    # Validate payload has observer info
     envelope_str = json.dumps(envelope)
-    assert episode_config.secret_word not in envelope_str
-    assert "imposter" not in envelope_str.lower()
-    assert "villager" not in envelope_str.lower()
+    assert episode_config.secret_word in envelope_str
+    assert "imposter" in envelope_str.lower()
+    assert "villager" in envelope_str.lower()

@@ -8,7 +8,7 @@ from src.engine.event_emitter import (
     EVT_VOTE_CAST,
     EventEmitter,
 )
-from src.engine.exceptions import NodeError
+from src.engine.exceptions import NodeError, RateLimitError
 from src.models import (
     EliminationResult,
     GameState,
@@ -138,9 +138,7 @@ async def _vote_with_fallback(state: GameState, agent, agent_id: str) -> _VoteRe
     Returns _VoteResult.
     """
     valid_targets = [
-        aid
-        for aid in state.agent_alive
-        if state.agent_alive[aid] and aid != agent_id
+        aid for aid in state.agent_alive if state.agent_alive[aid] and aid != agent_id
     ]
     if not valid_targets:
         raise NodeError(
@@ -161,6 +159,8 @@ async def _vote_with_fallback(state: GameState, agent, agent_id: str) -> _VoteRe
                     inner_thought=output.inner_thought,
                     used_fallback=False,
                 )
+        except RateLimitError:
+            raise
         except Exception:
             pass  # fall through to retry/fallback
 

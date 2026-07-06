@@ -9,7 +9,7 @@ export function AgentRoster() {
   const events = useGameStore((state) => state.events as GameEvent[]);
   
   const agents = useMemo(() => {
-    let roster = [
+    let roster: { name: string; is_eliminated: boolean; id?: string; role?: string; }[] = [
       { name: "Alpha", is_eliminated: false },
       { name: "Beta", is_eliminated: false },
       { name: "Gamma", is_eliminated: false },
@@ -72,7 +72,7 @@ export function AgentRoster() {
                       <Badge variant="outline" className="text-[10px]">Eliminated</Badge>
                     )}
                     {agent.role === "imposter" && (
-                      <Badge variant="destructive" className="text-[10px] bg-red-500/20 text-red-400 border-red-500/30">Imposter</Badge>
+                      <Badge variant="outline" className="text-[10px] bg-red-500/20 text-red-400 border-red-500/30">Imposter</Badge>
                     )}
                   </div>
                 </div>

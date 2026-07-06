@@ -10,7 +10,7 @@ from src.engine.event_emitter import (
     EVT_SURVIVOR_REACTED,
     EventEmitter,
 )
-from src.engine.exceptions import NodeError
+from src.engine.exceptions import NodeError, RateLimitError
 from src.models import (
     GameState,
     Phase,
@@ -188,6 +188,8 @@ async def _react_with_fallback(
                     statement=output.public_statement,
                     used_fallback=False,
                 )
+        except RateLimitError:
+            raise
         except Exception:
             pass  # Fall through to retry/fallback
 

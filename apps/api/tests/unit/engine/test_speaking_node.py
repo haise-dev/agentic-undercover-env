@@ -36,13 +36,13 @@ def ok_out(thought: str, statement: str) -> SpeakingOutput:
 
 @pytest.mark.asyncio
 async def test_speaking_node_phase_guard(game_state, mock_emitter):
-    # game_state starts at INIT phase by default
     agents = {}
-    with pytest.raises(ValueError, match="speaking_node requires Phase.SPEAKING"):
+    game_state.current_phase = Phase.VOTING
+    with pytest.raises(ValueError, match="speaking_node requires Phase.INIT, Phase.SPEAKING, or Phase.POLLING"):
         await speaking_node(game_state, agents, mock_emitter)
 
-    game_state.current_phase = Phase.VOTING
-    with pytest.raises(ValueError, match="speaking_node requires Phase.SPEAKING"):
+    game_state.current_phase = Phase.DELIBERATION
+    with pytest.raises(ValueError, match="speaking_node requires Phase.INIT, Phase.SPEAKING, or Phase.POLLING"):
         await speaking_node(game_state, agents, mock_emitter)
 
 
@@ -377,3 +377,51 @@ async def test_speaking_node_event_emission_integration(
         assert "inner_thought" not in payload
         assert "t0" not in json.dumps(event_spoke)
         assert "t1" not in json.dumps(event_spoke)
+
+
+@pytest.mark.asyncio
+async def test_speaking_node_loopback_from_polling(game_state, mock_emitter):
+    # Setup loopback state from POLLING phase, round 2 (max_rounds is 3 by default)
+    game_state.current_phase = Phase.POLLING
+    game_state.current_round = 2
+    
+    # Store initial turn order to verify shuffling
+    initial_turn_order = list(game_state.current_turn_order)
+
+    agents = {
+        "agent_0": MockAgent([ok_out("t0", "s0")]),
+        "agent_1": MockAgent([ok_out("t1", "s1")]),
+        "agent_2": MockAgent([ok_out("t2", "s2")]),
+        "agent_3": MockAgent([ok_out("t3", "s3")]),
+    }
+
+    # Pass GraphState wrap
+    from src.engine.graph.state import to_graph_state
+    graph_state = to_graph_state(game_state)
+
+    result_state = await speaking_node(graph_state, agents, mock_emitter)
+
+    # Check that game_state was updated and returned in graph_state
+    assert result_state is graph_state
+    assert game_state.current_phase == Phase.SPEAKING
+    assert game_state.current_round == 3
+
+    # Check system announcement is appended
+    assert len(game_state.all_announcements) == 1
+    announcement = game_state.all_announcements[0]
+    assert announcement.round_number == 3
+    assert announcement.phase == Phase.SPEAKING
+    assert "Round 3 begins" in announcement.content
+
+    # Check turn order is shuffled (same elements, but different order is highly likely.
+    # We can check set equality, and since it is shuffled, it should still have 4 agents.)
+    assert set(game_state.current_turn_order) == set(initial_turn_order)
+    assert len(game_state.current_turn_order) == 4
+
+    # Verify is_final_round was computed dynamically and passed to ContextBuilder
+    # since current_round (3) == max_rounds (3).
+    for agent_id in game_state.current_turn_order:
+        calls = agents[agent_id].speak_calls
+        assert len(calls) == 1
+        assert calls[0]["context"].is_final_round is True
+

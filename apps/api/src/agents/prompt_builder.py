@@ -55,14 +55,11 @@ def build_system_prompt(
 
 
 def build_user_prompt(
-    phase: Phase,
-    context: RoundContext,
-    current_agent_name: str,
-    **kwargs
+    phase: Phase, context: RoundContext, current_agent_name: str, **kwargs
 ) -> str:
     """Builds the phase-specific dynamic context block (user prompt)."""
     alive_agents_list = format_alive_agents(context.alive_agents)
-    
+
     # Filter public_history depending on phase logic if needed, but for now we just show all context history.
     # Actually, context.public_history usually only contains the current round's history or all, depending on engine.
     chat_history = format_chat_history(
@@ -71,35 +68,35 @@ def build_user_prompt(
     deliberation_history = format_chat_history(
         [m for m in context.public_history if m.phase == Phase.DELIBERATION]
     )
-    
+
     format_kwargs = {
         "round_number": context.current_round,
         "deliberation_round": context.deliberation_round,
         "alive_agents_list": alive_agents_list,
         "chat_history": chat_history,
         "deliberation_history": deliberation_history,
-        "is_final_round_notice": "This is the FINAL ROUND. A vote will be forced after deliberation." if context.is_final_round else "",
+        "is_final_round_notice": "This is the FINAL ROUND. A vote will be forced after deliberation."
+        if context.is_final_round
+        else "",
     }
 
     if phase == Phase.SPEAKING:
         return SPEAKING_PHASE_PROMPT.format(**format_kwargs)
-        
+
     elif phase == Phase.DELIBERATION:
         return DELIBERATION_PHASE_PROMPT.format(**format_kwargs)
-        
+
     elif phase == Phase.POLLING:
         return POLLING_PHASE_PROMPT.format(**format_kwargs)
-        
+
     elif phase == Phase.VOTING:
         return VOTING_PHASE_PROMPT.format(**format_kwargs)
-        
+
     elif phase == Phase.REACTION:
         is_eliminated_agent = kwargs.get("is_eliminated_agent", False)
-        
+
         if is_eliminated_agent:
-            return REACTION_ELIMINATED_PROMPT.format(
-                agent_name=current_agent_name
-            )
+            return REACTION_ELIMINATED_PROMPT.format(agent_name=current_agent_name)
         else:
             eliminated_role = kwargs.get("eliminated_role", "unknown")
             if isinstance(eliminated_role, Role):
@@ -112,6 +109,6 @@ def build_user_prompt(
                 outcome_statement=kwargs.get("outcome_statement", ""),
                 last_words=kwargs.get("last_words", ""),
             )
-            
+
     else:
         raise ValueError(f"Unsupported phase for user prompt: {phase}")

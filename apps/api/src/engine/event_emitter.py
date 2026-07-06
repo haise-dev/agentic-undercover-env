@@ -98,12 +98,12 @@ class EventEmitter:
 
         try:
             await self.redis_client.publish(self.channel, envelope)
-            
+
             # Also push to the event history list and reset TTL
             envelope_str = json.dumps(envelope)
             await self.redis_client.rpush(self.list_key, envelope_str)
             await self.redis_client.expire(self.list_key, 3600)  # 1 hour TTL
-            
+
             logger.debug("Emitted %s for episode %s", event_type, self.episode_id)
         except RedisConnectionError as exc:
             logger.error(

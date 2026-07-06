@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { use } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/src/components/layout/AppShell";
 import { AgentRoster } from "@/src/components/game/AgentRoster";
 import { PhaseHeader } from "@/src/components/game/PhaseHeader";
@@ -13,6 +14,7 @@ import { useGameStore } from "@/src/lib/store";
 
 export default function GamePage({ params }: { params: Promise<{ episodeId: string }> }) {
   const { episodeId } = use(params);
+  const router = useRouter();
   
   const { connectionStatus } = useGameStream(episodeId);
   const events = useGameStore((state) => state.events);
@@ -32,6 +34,17 @@ export default function GamePage({ params }: { params: Promise<{ episodeId: stri
     }
   }, [connectionStatus, episodeId, events]);
 
+  // Redirect to Setup page (/) on GAME_ERROR after 4 seconds
+  const hasError = events.some(e => e.event_type === "GAME_ERROR");
+  useEffect(() => {
+    if (hasError) {
+      const timer = setTimeout(() => {
+        router.push("/");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasError, router]);
+
   return (
     <div className="relative">
       <EndgameCard />
@@ -45,3 +58,4 @@ export default function GamePage({ params }: { params: Promise<{ episodeId: stri
     </div>
   );
 }
+

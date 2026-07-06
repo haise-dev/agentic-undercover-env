@@ -68,7 +68,11 @@ class ContextBuilder:
         )
 
         all_agent_names = ", ".join(agent.display_name for agent in state.config.agents)
-        game_language = state.config.game_language if hasattr(state.config, 'game_language') else "English"
+        game_language = (
+            state.config.game_language
+            if hasattr(state.config, "game_language")
+            else "English"
+        )
 
         return RoundContext(
             role_assignment=role_assignment,
@@ -122,8 +126,10 @@ class ContextBuilder:
         alive_list = []
         for agent in state.config.agents:
             if state.agent_alive.get(agent.agent_id, False):
-                alive_list.append({
-                    "agent_id": agent.agent_id,
-                    "display_name": agent.display_name,
-                })
+                alive_list.append(
+                    {
+                        "agent_id": agent.agent_id,
+                        "display_name": agent.display_name,
+                    }
+                )
         return alive_list

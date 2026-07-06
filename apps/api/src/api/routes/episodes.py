@@ -5,18 +5,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.services.runner_service import RunnerService
 from src.core.db import get_session
 from src.core.redis import get_redis_client
 from src.db.repository import ActionLogRepository, EpisodeRepository
 from src.models import ActionLog, EpisodeConfig, EpisodeExport
-from src.api.services.runner_service import RunnerService
 
 router = APIRouter()
+
 
 class EpisodeStatusResponse(BaseModel):
     episode_id: str
     status: str
-
 
 
 class EpisodeCreateResponse(BaseModel):
@@ -61,14 +61,16 @@ async def create_episode(config: EpisodeConfig) -> EpisodeCreateResponse:
 async def start_episode(episode_id: str) -> EpisodeStatusResponse:
     if RunnerService.is_running(episode_id):
         raise HTTPException(status_code=400, detail="Episode is already running")
-        
+
     try:
         async with get_redis_client() as redis:
             config_str = await redis.get(f"pending_episode:{episode_id}")
             if not config_str:
-                raise HTTPException(status_code=404, detail="Pending episode config not found")
+                raise HTTPException(
+                    status_code=404, detail="Pending episode config not found"
+                )
             config = EpisodeConfig.model_validate_json(config_str)
-            
+
         RunnerService.start_episode_task(episode_id, config)
         return EpisodeStatusResponse(episode_id=episode_id, status="started")
     except HTTPException:
@@ -83,17 +85,16 @@ async def start_episode(episode_id: str) -> EpisodeStatusResponse:
     summary="Get current running status of an episode",
 )
 async def get_episode_status(
-    episode_id: str,
-    session: AsyncSession = Depends(get_session)
+    episode_id: str, session: AsyncSession = Depends(get_session)
 ) -> EpisodeStatusResponse:
     if RunnerService.is_running(episode_id):
         return EpisodeStatusResponse(episode_id=episode_id, status="running")
-        
+
     # Check DB
     episode = await EpisodeRepository.get_by_id(session, episode_id)
     if episode:
         return EpisodeStatusResponse(episode_id=episode_id, status="completed")
-        
+
     return EpisodeStatusResponse(episode_id=episode_id, status="pending_or_not_found")
 
 
@@ -142,13 +143,15 @@ async def get_episode_logs(
         uuid.UUID(episode_id)
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No logs found for this episode"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No logs found for this episode",
         )
 
     logs = await ActionLogRepository.get_by_episode(session, episode_id)
     if not logs:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No logs found for this episode"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No logs found for this episode",
         )
 
     return logs

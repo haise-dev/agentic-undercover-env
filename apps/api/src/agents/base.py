@@ -5,7 +5,6 @@ from src.models import (
     AgentConfig,
     AgentRoleAssignment,
     DeliberationOutput,
-    Phase,
     PollingOutput,
     ReactionOutput,
     RoundContext,
@@ -20,7 +19,9 @@ class BaseAgent(ABC):
     Whether Human or AI, the game engine will invoke these methods for each phase.
     """
 
-    def __init__(self, config: AgentConfig, role_assignment: AgentRoleAssignment) -> None:
+    def __init__(
+        self, config: AgentConfig, role_assignment: AgentRoleAssignment
+    ) -> None:
         self.config = config
         self.role_assignment = role_assignment
         self.action_logs: list[ActionLog] = []

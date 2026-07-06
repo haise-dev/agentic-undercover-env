@@ -70,6 +70,8 @@ def test_round_context_empty_history():
         public_history=[],
         announcements=[],
         alive_agents=[],
+        all_agent_names="Alice, Bob, Charlie, Diana",
+        game_language="English",
     )
     assert ctx.public_history == []
 
@@ -86,6 +88,8 @@ def test_round_context_is_final_round_default():
         public_history=[],
         announcements=[],
         alive_agents=[],
+        all_agent_names="Alice, Bob, Charlie, Diana",
+        game_language="English",
     )
     assert ctx.is_final_round is False
 
@@ -102,6 +106,8 @@ def test_round_context_frozen():
         public_history=[],
         announcements=[],
         alive_agents=[],
+        all_agent_names="Alice, Bob, Charlie, Diana",
+        game_language="English",
     )
     with pytest.raises(ValidationError):
         ctx.current_round = 2
@@ -119,6 +125,8 @@ def test_round_context_serializable():
         public_history=[],
         announcements=[],
         alive_agents=[],
+        all_agent_names="Alice, Bob, Charlie, Diana",
+        game_language="English",
     )
     dumped = ctx.model_dump()
     assert isinstance(dumped, dict)
@@ -137,5 +145,7 @@ def test_alive_agents_structure():
         public_history=[],
         announcements=[],
         alive_agents=[{"agent_id": "agent_0", "display_name": "Alice"}],
+        all_agent_names="Alice, Bob, Charlie, Diana",
+        game_language="English",
     )
     assert ctx.alive_agents == [{"agent_id": "agent_0", "display_name": "Alice"}]

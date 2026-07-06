@@ -3,6 +3,7 @@ from src.models.enums import Phase
 
 class AgentError(Exception):
     """Base class for all agent-related exceptions."""
+
     pass
 
 
