@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
 from src.models.assignment import AgentRoleAssignment
-from src.models.enums import Phase
+from src.models.enums import DeliberationIntent, Phase
 
 
 class PublicMessage(BaseModel):
@@ -14,6 +14,8 @@ class PublicMessage(BaseModel):
     deliberation_round: int | None = None
     content: str
     timestamp: str
+    intent: DeliberationIntent | None = None
+    target_name: str | None = None
 
 
 class SystemAnnouncement(BaseModel):

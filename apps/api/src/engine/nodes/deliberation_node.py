@@ -43,10 +43,10 @@ async def deliberation_node(
 
     agent_id = game_state.next_speaker_id
     if agent_id is None:
-        raise ValueError(
-            "deliberation_node called with next_speaker_id=None. "
-            "The router must set next_speaker_id before routing here."
-        )
+        import random
+
+        alive_agents = game_state.alive_agent_ids
+        agent_id = random.choice(alive_agents)
 
     context = ContextBuilder.build(game_state, agent_id)
     agent = agents[agent_id]
@@ -68,6 +68,8 @@ async def deliberation_node(
         deliberation_round=game_state.current_deliberation_round,
         content=output.public_statement,
         timestamp=datetime.now(UTC).isoformat(),
+        intent=output.intent,
+        target_name=output.target_name,
     )
 
     # Append to GameState immediately for next agents to see

@@ -41,35 +41,71 @@ class MockAgent:
 
     async def speak(self, context):
         self.speak_calls.append({"context": context})
-        result = next(self._speak_outputs)
+        try:
+            result = next(self._speak_outputs)
+        except StopIteration:
+            from src.models import SpeakingOutput
+            result = SpeakingOutput(
+                inner_thought="Default speak thought",
+                public_statement="Default speak statement",
+            )
         if isinstance(result, Exception):
             raise result
         return result
 
     async def deliberate(self, context):
         self.deliberate_calls.append({"context": context})
-        result = next(self._deliberate_outputs)
+        try:
+            result = next(self._deliberate_outputs)
+        except StopIteration:
+            from src.models import DeliberationOutput, DeliberationIntent
+            result = DeliberationOutput(
+                inner_thought="Default deliberate thought",
+                public_statement="Default deliberate statement",
+                intent=DeliberationIntent.GENERAL_OPINION,
+            )
         if isinstance(result, Exception):
             raise result
         return result
 
     async def poll(self, context):
         self.poll_calls.append({"context": context})
-        result = next(self._poll_outputs)
+        try:
+            result = next(self._poll_outputs)
+        except StopIteration:
+            from src.models import PollingOutput, PollVote
+            result = PollingOutput(
+                inner_thought="Default poll thought",
+                poll_vote=PollVote.SKIP,
+            )
         if isinstance(result, Exception):
             raise result
         return result
 
     async def vote(self, context):
         self.vote_calls.append({"context": context})
-        result = next(self._vote_outputs)
+        try:
+            result = next(self._vote_outputs)
+        except StopIteration:
+            from src.models import VotingOutput
+            result = VotingOutput(
+                inner_thought="Default vote thought",
+                vote_target="agent_0",
+            )
         if isinstance(result, Exception):
             raise result
         return result
 
     async def react(self, context, **kwargs):
         self.react_calls.append({"context": context, **kwargs})
-        result = next(self._react_outputs)
+        try:
+            result = next(self._react_outputs)
+        except StopIteration:
+            from src.models import ReactionOutput
+            result = ReactionOutput(
+                inner_thought="Default react thought",
+                public_statement="Default react statement",
+            )
         if isinstance(result, Exception):
             raise result
         return result

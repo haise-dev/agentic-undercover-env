@@ -1,7 +1,7 @@
 from langgraph.graph import END, START, StateGraph
 
 from src.engine.event_emitter import EventEmitter
-from src.engine.graph.routers import poll_router
+from src.engine.graph.routers import poll_router, route_dynamic_deliberation
 from src.engine.graph.state import GraphState
 from src.engine.nodes.deliberation_node import deliberation_node
 from src.engine.nodes.polling_node import polling_node
@@ -48,9 +48,18 @@ def build_graph(agents: dict, emitter: EventEmitter):
     # Wire nodes
     workflow.add_edge(START, "speaking")
     workflow.add_edge("speaking", "deliberation")
-    workflow.add_edge("deliberation", "polling")
 
-    # Conditional edge
+    # Conditional edge for deliberation
+    workflow.add_conditional_edges(
+        "deliberation",
+        route_dynamic_deliberation,
+        {
+            "deliberation": "deliberation",
+            "polling": "polling",
+        },
+    )
+
+    # Conditional edge for polling
     workflow.add_conditional_edges(
         "polling",
         poll_router,

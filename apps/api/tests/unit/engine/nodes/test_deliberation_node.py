@@ -98,6 +98,8 @@ async def test_deliberation_node_appends_message(game_state, mock_emitter):
     assert msg.agent_id == "agent_0"
     assert msg.phase == Phase.DELIBERATION
     assert msg.content == "s0"
+    assert msg.intent == DeliberationIntent.GENERAL_OPINION
+    assert msg.target_name is None
 
 
 @pytest.mark.asyncio
@@ -126,13 +128,26 @@ async def test_deliberation_node_emits_event_with_intent(game_state, mock_emitte
 
 
 @pytest.mark.asyncio
-async def test_deliberation_node_raises_if_no_next_speaker(game_state, mock_emitter):
+async def test_deliberation_node_fallback_if_no_next_speaker(game_state, mock_emitter):
     game_state.current_phase = Phase.DELIBERATION
     game_state.next_speaker_id = None
 
+    agents = {
+        "agent_0": MockAgent(deliberate_outputs=[ok_out("t0", "s0")]),
+        "agent_1": MockAgent(deliberate_outputs=[ok_out("t1", "s1")]),
+        "agent_2": MockAgent(deliberate_outputs=[ok_out("t2", "s2")]),
+        "agent_3": MockAgent(deliberate_outputs=[ok_out("t3", "s3")]),
+    }
     graph_state = to_graph_state(game_state)
-    with pytest.raises(ValueError, match="next_speaker_id=None"):
-        await deliberation_node(graph_state, {}, mock_emitter)
+    await deliberation_node(graph_state, agents, mock_emitter)
+    assert len(game_state.all_messages) == 1
+    assert game_state.all_messages[0].agent_id in (
+        "agent_0",
+        "agent_1",
+        "agent_2",
+        "agent_3",
+    )
+    assert game_state.next_speaker_id is None
 
 
 @pytest.mark.asyncio

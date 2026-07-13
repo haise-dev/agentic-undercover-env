@@ -59,10 +59,6 @@ def test_runner_init_validation():
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="E9-T3: deliberation_node refactored to single-agent; full routing loop requires E9-T4",
-    strict=False,
-)
 @patch("src.engine.nodes.endgame_node.EpisodeRepository.create", new_callable=AsyncMock)
 async def test_runner_full_linear_pipeline(
     mock_repo_create, episode_config, fake_redis, fake_redis_client
@@ -163,30 +159,30 @@ async def test_runner_full_linear_pipeline(
     async for m in pubsub.listen():
         if m["type"] == "message":
             events.append(json.loads(m["data"].decode("utf-8")))
-            # Total events = 28:
-            # 1 GAME_START + 1 ROUND_STARTED + 4 AGENT_SPOKE + 8 AGENT_DELIBERATED + 1 POLLING_STARTED + 1 POLL_RESULT + 1 VOTING_STARTED + 4 VOTE_CAST + 1 ELIMINATION_RESULT + 1 LAST_WORDS + 1 ROLE_REVEAL + 3 SURVIVOR_REACTED + 1 GAME_OVER
-            if len(events) >= 28:
+            # Total events = 36:
+            # 1 GAME_START + 1 ROUND_STARTED + 4 AGENT_SPOKE + 16 AGENT_DELIBERATED + 1 POLLING_STARTED + 1 POLL_RESULT + 1 VOTING_STARTED + 4 VOTE_CAST + 1 ELIMINATION_RESULT + 1 LAST_WORDS + 1 ROLE_REVEAL + 3 SURVIVOR_REACTED + 1 GAME_OVER
+            if len(events) >= 36:
                 break
 
-    assert len(events) == 28
+    assert len(events) == 36
     event_types = [e["event_type"] for e in events]
     
     assert event_types[0] == EVT_GAME_START
     assert event_types[1] == EVT_ROUND_STARTED
     assert event_types[2:6] == [EVT_AGENT_SPOKE] * 4
-    # Deliberation events can come in shuffled turn order, but should be 8 of them
-    assert event_types[6:14] == [EVT_AGENT_DELIBERATED] * 8
-    assert event_types[14] == EVT_POLLING_STARTED
-    assert event_types[15] == EVT_POLL_RESULT
-    assert event_types[16] == EVT_VOTING_STARTED
+    # Deliberation events can come in shuffled turn order, but should be 16 of them
+    assert event_types[6:22] == [EVT_AGENT_DELIBERATED] * 16
+    assert event_types[22] == EVT_POLLING_STARTED
+    assert event_types[23] == EVT_POLL_RESULT
+    assert event_types[24] == EVT_VOTING_STARTED
     # Votes can come in any order because they are concurrent
-    assert set(event_types[17:21]) == {EVT_VOTE_CAST}
-    assert event_types[21] == EVT_ELIMINATION_RESULT
-    assert event_types[22] == EVT_LAST_WORDS
-    assert event_types[23] == EVT_ROLE_REVEAL
+    assert set(event_types[25:29]) == {EVT_VOTE_CAST}
+    assert event_types[29] == EVT_ELIMINATION_RESULT
+    assert event_types[30] == EVT_LAST_WORDS
+    assert event_types[31] == EVT_ROLE_REVEAL
     # Reactions can come in any order
-    assert set(event_types[24:27]) == {EVT_SURVIVOR_REACTED}
-    assert event_types[27] == EVT_GAME_OVER
+    assert set(event_types[32:35]) == {EVT_SURVIVOR_REACTED}
+    assert event_types[35] == EVT_GAME_OVER
 
 
 @pytest.mark.asyncio
