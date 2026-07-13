@@ -183,6 +183,19 @@ CRITICAL RULES FOR REALISTIC DISCUSSION:
 - NO DOGPILING / PARROTING: If the player speaking immediately before you just accused someone, do NOT repeat their accusation or reasons. You MUST either provide completely NEW evidence, accuse a DIFFERENT player, or ask the accused a specific new question to push the game forward.
 - Keep your statement brief, conversational, and direct (max 1-2 short sentences). No polite AI padding or lecturing.
 
+== INTENT SYSTEM ==
+You must output an `intent` that summarizes the primary goal of your public statement. You must also output `target_name` if your intent targets a specific player.
+Valid intents:
+- "general_opinion": Sharing a generic observation without targeting anyone. (target_name MUST be null)
+- "accuse": Actively accusing someone of being the Imposter. (target_name MUST be the exact name of the accused player)
+- "question": Asking a specific player a direct question. (target_name MUST be the exact name of the player)
+- "defend": Defending yourself against an accusation. (target_name MUST be null)
+- "agree_with": Agreeing with another player's statement or deduction. (target_name MUST be the exact name of the player you are agreeing with). Consistency Rule: Do NOT agree with an accusation against someone you previously defended!
+- "suggest_vote": Proposing to the group that everyone should vote immediately in the upcoming polling phase. This is purely a social move to persuade others; it does NOT instantly trigger a vote. (target_name MUST be null)
+- "suggest_skip": Proposing to the group to skip the vote and keep talking. This is purely a social move. (target_name MUST be null)
+
+CRITICAL: If you use "accuse" or "question", the system will immediately force the target to defend themselves. Use this strategically.
+
 Before writing, plan in your inner_thought:
 STEP 1 — CLUE AUDIT (run this BEFORE reading what others accused):
   You know the secret word is "{secret_word}". For each player's Speaking clue, ask:
@@ -193,7 +206,8 @@ STEP 1 — CLUE AUDIT (run this BEFORE reading what others accused):
   If your audit says player X is most suspicious, target X — not who others point to.
 
 STEP 2 — DISCUSSION FLOW & ANTI-DOGPILE CHECK: How can I respond to the LATEST statements? If the previous speaker made an accusation, how can I add value instead of just agreeing or parroting them? Can I bring up someone else, or challenge their reasoning?
-STEP 3 — STATEMENT DRAFT: Formulate your short response in {game_language}.
+STEP 3 — INTENT & TARGET: Which intent best fits my statement? Who is the exact target_name (if any)?
+STEP 4 — STATEMENT DRAFT: Formulate your short response in {game_language}.
 
 Now produce your JSON response."""
 
@@ -221,10 +235,24 @@ CRITICAL RULES FOR REALISTIC DISCUSSION:
 - NO DOGPILING / PARROTING: If the player speaking immediately before you just accused someone, do NOT repeat their accusation or reasons. You MUST either provide completely NEW evidence, accuse a DIFFERENT player, or ask the accused a specific new question to push the game forward.
 - Keep your statement brief, conversational, and direct (max 1-2 short sentences). No polite AI padding or lecturing.
 
+== INTENT SYSTEM ==
+You must output an `intent` that summarizes the primary goal of your public statement. You must also output `target_name` if your intent targets a specific player.
+Valid intents:
+- "general_opinion": Sharing a generic observation without targeting anyone. (target_name MUST be null)
+- "accuse": Actively accusing someone of being the Imposter. (target_name MUST be the exact name of the accused player)
+- "question": Asking a specific player a direct question. (target_name MUST be the exact name of the player)
+- "defend": Defending yourself against an accusation. (target_name MUST be null)
+- "agree_with": Agreeing with another player's statement or deduction. (target_name MUST be the exact name of the player you are agreeing with). Consistency Rule: Do NOT agree with an accusation against someone you previously defended!
+- "suggest_vote": Proposing to the group that everyone should vote immediately in the upcoming polling phase. This is purely a social move to persuade others; it does NOT instantly trigger a vote. (target_name MUST be null)
+- "suggest_skip": Proposing to the group to skip the vote and keep talking. This is purely a social move. (target_name MUST be null)
+
+CRITICAL: If you use "accuse" or "question", the system will immediately force the target to defend themselves. Use this strategically.
+
 Before writing, plan in your inner_thought:
 STEP 1 — REVIEW & EVALUATE: Look at the speaking clues and the deliberation history. Who is suspected? What defenses or deflections have been made?
 STEP 2 — DISCUSSION FLOW & ANTI-DOGPILE CHECK: How can I respond to the LATEST statements? If the previous speaker made an accusation, how can I add value instead of just agreeing or parroting them? Can I bring up someone else, or challenge their reasoning?
-STEP 3 — STATEMENT DRAFT: Formulate your short response in {game_language}.
+STEP 3 — INTENT & TARGET: Which intent best fits my statement? Who is the exact target_name (if any)?
+STEP 4 — STATEMENT DRAFT: Formulate your short response in {game_language}.
 
 Now produce your JSON response."""
 

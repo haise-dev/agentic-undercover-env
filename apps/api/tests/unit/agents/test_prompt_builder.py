@@ -134,6 +134,9 @@ def test_build_user_prompt_deliberation(round_context):
     prompt = build_user_prompt(Phase.DELIBERATION, round_context, "Bob")
     
     assert "Deliberation Round: 1 of 2" in prompt
+    assert "== INTENT SYSTEM ==" in prompt
+    assert "general_opinion" in prompt
+    assert "accuse" in prompt
 
 
 def test_build_user_prompt_polling(round_context):
