@@ -185,7 +185,6 @@ async def check_redis_connection(
     for i in range(attempts):
         try:
             await client.ping()
-            logger.info("Redis connection verified successfully.")
             return
         except (RedisConnectionError, OSError) as exc:
             if i < len(retries):

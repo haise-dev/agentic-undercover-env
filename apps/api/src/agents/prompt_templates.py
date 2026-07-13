@@ -38,7 +38,9 @@ Identify and vote out the Imposter, and survive.
    - You MUST speak in the FIRST PERSON ("I", "me", "my").
    - Do NOT talk to yourself by name in your thoughts (e.g. do not write "I am {agent_name}"). Just think naturally.
 6. STRICTURE:
-   - UNDER NO CIRCUMSTANCES are you allowed to output Vietnamese or any language other than {game_language}. ANY DEVIATION WILL CAUSE A SYSTEM CRASH. Everything must be strictly in {game_language}."""
+   - UNDER NO CIRCUMSTANCES are you allowed to output Vietnamese or any language other than {game_language}. ANY DEVIATION WILL CAUSE A SYSTEM CRASH. Everything must be strictly in {game_language}.
+7. SECRECY RULE (CRITICAL):
+   - UNDER NO CIRCUMSTANCES are you allowed to say the exact secret word in your public statements. If you reveal the word, the Imposter will instantly win. Use pronouns like "our word", "it", or "the topic" instead."""
 
 IMPOSTER_SYSTEM_PROMPT = """You are {agent_name}, a human player in a social deduction game called Undercover.
 
@@ -79,7 +81,9 @@ Blend in, survive the vote, and redirect suspicion to Villagers.
    - You MUST speak in the FIRST PERSON ("I", "me", "my").
    - Do NOT talk to yourself by name in your thoughts (e.g. do not write "I am {agent_name}"). Just think naturally.
 6. STRICTURE:
-   - UNDER NO CIRCUMSTANCES are you allowed to output Vietnamese or any language other than {game_language}. ANY DEVIATION WILL CAUSE A SYSTEM CRASH. Everything must be strictly in {game_language}."""
+   - UNDER NO CIRCUMSTANCES are you allowed to output Vietnamese or any language other than {game_language}. ANY DEVIATION WILL CAUSE A SYSTEM CRASH. Everything must be strictly in {game_language}.
+7. SECRECY RULE (CRITICAL):
+   - NEVER say the exact word you deduce as the secret word in your public statements. You must keep it vague. Use pronouns like "our word", "it", or "the topic" instead."""
 
 
 # Phase-Specific User Prompts
