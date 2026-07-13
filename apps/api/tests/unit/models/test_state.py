@@ -110,3 +110,86 @@ def test_gamestate_serializable(game_state):
 
 def test_started_at_is_string(game_state):
     assert isinstance(game_state.started_at, str)
+
+
+def test_deliberation_fields_default_values(game_state):
+    assert game_state.next_speaker_id is None
+    assert game_state.deliberation_message_count == 0
+    assert game_state.turns_count == {}
+    assert game_state.speakers_this_round == set()
+
+
+def test_turns_count_is_mutable(game_state):
+    game_state.turns_count["agent_0"] = 2
+    assert game_state.turns_count["agent_0"] == 2
+
+
+def test_speakers_this_round_is_mutable(game_state):
+    game_state.speakers_this_round.add("agent_0")
+    assert "agent_0" in game_state.speakers_this_round
+
+
+def test_deliberation_message_count_is_mutable(game_state):
+    game_state.deliberation_message_count += 1
+    assert game_state.deliberation_message_count == 1
+
+
+def test_gamestate_serializable_with_new_fields(game_state):
+    game_state.next_speaker_id = "agent_1"
+    game_state.deliberation_message_count = 3
+    game_state.turns_count = {"agent_0": 1}
+    game_state.speakers_this_round = {"agent_0"}
+    
+    dumped = game_state.model_dump()
+    assert dumped["next_speaker_id"] == "agent_1"
+    assert dumped["deliberation_message_count"] == 3
+    assert dumped["turns_count"] == {"agent_0": 1}
+    # Pydantic serializes set to list in model_dump() / json
+    assert isinstance(dumped["speakers_this_round"], list | set)
+
+
+def test_reset_clears_next_speaker_id(game_state):
+    game_state.next_speaker_id = "agent_1"
+    game_state.reset_deliberation_tracking()
+    assert game_state.next_speaker_id is None
+
+
+def test_reset_clears_deliberation_message_count(game_state):
+    game_state.deliberation_message_count = 7
+    game_state.reset_deliberation_tracking()
+    assert game_state.deliberation_message_count == 0
+
+
+def test_reset_clears_turns_count(game_state):
+    game_state.turns_count = {"agent_0": 3}
+    game_state.reset_deliberation_tracking()
+    assert game_state.turns_count == {}
+
+
+def test_reset_clears_speakers_this_round(game_state):
+    game_state.speakers_this_round = {"agent_0", "agent_1"}
+    game_state.reset_deliberation_tracking()
+    assert game_state.speakers_this_round == set()
+
+
+def test_reset_clears_current_deliberation_round(game_state):
+    game_state.current_deliberation_round = 3
+    game_state.reset_deliberation_tracking()
+    assert game_state.current_deliberation_round == 1
+
+
+def test_reset_does_not_affect_other_fields(game_state):
+    game_state.current_round = 2
+    original_messages_len = len(game_state.all_messages)
+    game_state.reset_deliberation_tracking()
+    assert game_state.current_round == 2
+    assert len(game_state.all_messages) == original_messages_len
+
+
+def test_reset_is_idempotent(game_state):
+    game_state.next_speaker_id = "agent_1"
+    game_state.reset_deliberation_tracking()
+    game_state.reset_deliberation_tracking()
+    assert game_state.next_speaker_id is None
+    assert game_state.deliberation_message_count == 0
+

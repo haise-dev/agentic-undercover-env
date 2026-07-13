@@ -43,6 +43,23 @@ class GameState(BaseModel):
     started_at: str  # ISO 8601 UTC, set at INIT
     ended_at: str | None = None
 
+    # Deliberation tracking
+    next_speaker_id: str | None = None
+    deliberation_message_count: int = 0
+    turns_count: dict[str, int] = Field(default_factory=dict)
+    speakers_this_round: set[str] = Field(default_factory=set)
+
+    def reset_deliberation_tracking(self) -> None:
+        """
+        Resets all deliberation tracking fields to their initial zero state.
+        Must be called at the start of every new deliberation segment.
+        """
+        self.next_speaker_id = None
+        self.deliberation_message_count = 0
+        self.turns_count = {}
+        self.speakers_this_round = set()
+        self.current_deliberation_round = 1
+
     # ── Computed properties ─────────────────────────────────────
     @property
     def alive_agent_ids(self) -> list[str]:
