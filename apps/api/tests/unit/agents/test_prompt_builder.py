@@ -66,7 +66,7 @@ def test_format_chat_history():
         ),
     ]
     formatted = format_chat_history(messages)
-    assert formatted == "[Alice]: I like milk.\n[Bob]: I like chasing mice."
+    assert formatted == "[Round 1 - Guess] [Alice]: I like milk.\n[Round 1 - Guess] [Bob]: I like chasing mice."
 
 
 def test_format_chat_history_empty():
@@ -179,3 +179,158 @@ def test_build_user_prompt_reaction_survivor(round_context):
 def test_build_user_prompt_invalid_phase(round_context):
     with pytest.raises(ValueError, match="Unsupported phase for user prompt"):
         build_user_prompt("UNKNOWN_PHASE", round_context, "Bob")
+
+
+def test_build_user_prompt_speaking_villager_uses_villager_template(round_context):
+    prompt = build_user_prompt(Phase.SPEAKING, round_context, "Bob")
+    # Villager speaking prompt should not contain the Imposter's deduction step
+    assert "LISTEN & DEDUCE" not in prompt
+    assert "CROSS-ROUND CONSISTENCY" in prompt
+
+
+def test_build_user_prompt_speaking_imposter_uses_imposter_template(round_context):
+    imposter_role = AgentRoleAssignment(
+        agent_id="agent_1", role=Role.IMPOSTER, secret_word=None, topic="Animals"
+    )
+    object.__setattr__(round_context, "role_assignment", imposter_role)
+    prompt = build_user_prompt(Phase.SPEAKING, round_context, "Bob")
+    # Imposter speaking prompt must contain deduction instructions
+    assert "LISTEN & DEDUCE" in prompt
+    assert "CROSS-ROUND CONSISTENCY" in prompt
+
+
+def test_build_user_prompt_deliberation_villager_uses_villager_template(round_context):
+    object.__setattr__(round_context, "deliberation_round", 1)
+    prompt = build_user_prompt(Phase.DELIBERATION, round_context, "Bob")
+    # Villager deliberation prompt must contain Clue Audit instructions and reference the secret word
+    assert "CLUE AUDIT" in prompt
+    assert "Cat" in prompt
+
+
+def test_build_user_prompt_deliberation_imposter_uses_imposter_template(round_context):
+    imposter_role = AgentRoleAssignment(
+        agent_id="agent_1", role=Role.IMPOSTER, secret_word=None, topic="Animals"
+    )
+    object.__setattr__(round_context, "role_assignment", imposter_role)
+    object.__setattr__(round_context, "deliberation_round", 1)
+    prompt = build_user_prompt(Phase.DELIBERATION, round_context, "Bob")
+    # Imposter deliberation prompt should not contain Clue Audit or refer to secret word
+    assert "CLUE AUDIT" not in prompt
+    assert "secret word" not in prompt.lower()
+
+
+def test_build_user_prompt_polling_same_for_both_roles(round_context):
+    prompt_villager = build_user_prompt(Phase.POLLING, round_context, "Bob")
+    
+    imposter_role = AgentRoleAssignment(
+        agent_id="agent_1", role=Role.IMPOSTER, secret_word=None, topic="Animals"
+    )
+    object.__setattr__(round_context, "role_assignment", imposter_role)
+    prompt_imposter = build_user_prompt(Phase.POLLING, round_context, "Bob")
+    
+    assert prompt_villager == prompt_imposter
+
+
+def test_build_user_prompt_voting_same_for_both_roles(round_context):
+    prompt_villager = build_user_prompt(Phase.VOTING, round_context, "Bob")
+    
+    imposter_role = AgentRoleAssignment(
+        agent_id="agent_1", role=Role.IMPOSTER, secret_word=None, topic="Animals"
+    )
+    object.__setattr__(round_context, "role_assignment", imposter_role)
+    prompt_imposter = build_user_prompt(Phase.VOTING, round_context, "Bob")
+    
+    assert prompt_villager == prompt_imposter
+
+
+def test_new_prompt_templates_vars():
+    from src.agents.prompt_templates import (
+        IMPOSTER_SPEAKING_PROMPT,
+        VILLAGER_DELIBERATION_PROMPT,
+        IMPOSTER_DELIBERATION_PROMPT,
+    )
+    
+    # Verify templates have expected keywords/placeholders
+    assert "past_history" in IMPOSTER_SPEAKING_PROMPT
+    assert "chat_history" in IMPOSTER_SPEAKING_PROMPT
+    assert "topic" in IMPOSTER_SPEAKING_PROMPT
+    
+    assert "past_history" in VILLAGER_DELIBERATION_PROMPT
+    assert "chat_history" in VILLAGER_DELIBERATION_PROMPT
+    assert "deliberation_history" in VILLAGER_DELIBERATION_PROMPT
+    assert "secret_word" in VILLAGER_DELIBERATION_PROMPT
+    assert "topic" in VILLAGER_DELIBERATION_PROMPT
+    
+    assert "past_history" in IMPOSTER_DELIBERATION_PROMPT
+    assert "chat_history" in IMPOSTER_DELIBERATION_PROMPT
+    assert "deliberation_history" in IMPOSTER_DELIBERATION_PROMPT
+    assert "secret_word" not in IMPOSTER_DELIBERATION_PROMPT
+
+
+def test_cr5_t1_prompt_optimization_no_vietnamese():
+    from src.agents.prompt_templates import (
+        VILLAGER_SYSTEM_PROMPT,
+        IMPOSTER_SYSTEM_PROMPT,
+        SPEAKING_PHASE_PROMPT,
+        IMPOSTER_SPEAKING_PROMPT,
+        VILLAGER_DELIBERATION_PROMPT,
+        IMPOSTER_DELIBERATION_PROMPT,
+    )
+    
+    all_prompts = [
+        VILLAGER_SYSTEM_PROMPT,
+        IMPOSTER_SYSTEM_PROMPT,
+        SPEAKING_PHASE_PROMPT,
+        IMPOSTER_SPEAKING_PROMPT,
+        VILLAGER_DELIBERATION_PROMPT,
+        IMPOSTER_DELIBERATION_PROMPT,
+    ]
+    
+    # Assert that no Vietnamese characters are in the prompt templates.
+    # Vietnamese characters: á, à, ả, ã, ạ, â, ấ, ầ, ẩn, ẫ, ậ, ă, ắ, ằ, ẳ, ẵ, ặ, é, è, ẻ, ẽ, ẹ, ê, ế, ề, ể, ễ, ệ, í, ì, ỉ, ĩ, ị, ó, ò, ỏ, õ, ọ, ô, ố, ồ, ổ, ỗ, ộ, ơ, ớ, ờ, ở, ỡ, ợ, ú, ù, ủ, ũ, ụ, ư, ứ, ừ, ử, ữ, ự, ý, ỳ, ỷ, ỹ, ỵ, đ
+    vietnamese_chars = "áàảãạâấầẩẫậăắằẳẵặéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ"
+    for prompt in all_prompts:
+        found_chars = [c for c in prompt.lower() if c in vietnamese_chars]
+        assert not found_chars, f"Found Vietnamese characters {found_chars} in prompt"
+
+
+def test_cr5_t1_identity_rules():
+    from src.agents.prompt_templates import VILLAGER_SYSTEM_PROMPT, IMPOSTER_SYSTEM_PROMPT
+    
+    assert "CRITICAL IDENTITY RULE" in VILLAGER_SYSTEM_PROMPT
+    assert "CRITICAL IDENTITY RULE" in IMPOSTER_SYSTEM_PROMPT
+    assert "third person" in VILLAGER_SYSTEM_PROMPT.lower()
+    assert "third person" in IMPOSTER_SYSTEM_PROMPT.lower()
+
+
+def test_cr5_t2_reaction_prompt_has_variables():
+    from src.agents.prompt_templates import REACTION_SURVIVOR_PROMPT
+    
+    assert "{agent_vote_target}" in REACTION_SURVIVOR_PROMPT
+    assert "{game_outcome}" in REACTION_SURVIVOR_PROMPT
+    assert "{vote_correct_status}" in REACTION_SURVIVOR_PROMPT
+    assert "{you_won_status}" in REACTION_SURVIVOR_PROMPT
+
+
+def test_cr5_t2_prompt_builder_passes_reaction_context(round_context):
+    prompt = build_user_prompt(
+        Phase.REACTION, 
+        round_context, 
+        "Alice",
+        is_eliminated_agent=False,
+        eliminated_agent_name="Bob",
+        eliminated_role=Role.IMPOSTER,
+        outcome_statement="The Villagers have won.",
+        last_words="I'll be back.",
+        agent_vote_target="Dave",
+        game_outcome="villagers_win",
+        vote_correct_status="YES — you voted for the right person.",
+        you_won_status="YOU WON this game."
+    )
+    
+    assert "You voted for: Dave" in prompt
+    assert "Overall outcome: villagers_win" in prompt
+    assert "Did you vote correctly? YES — you voted for the right person." in prompt
+    assert "Did you win? YOU WON this game." in prompt
+
+

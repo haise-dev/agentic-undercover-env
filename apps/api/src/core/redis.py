@@ -113,6 +113,14 @@ class RedisClient:
             logger.error("Redis set failed for key %s: %s", key, exc)
             raise RedisConnectionError(f"Redis set error: {exc}") from exc
 
+    async def incrby(self, key: str, amount: int = 1) -> int:
+        """Increments the number stored at key by amount."""
+        try:
+            return await self.raw.incrby(key, amount)
+        except (RedisConnectionError, OSError) as exc:
+            logger.error("Redis incrby failed for key %s: %s", key, exc)
+            raise RedisConnectionError(f"Redis incrby error: {exc}") from exc
+
     async def delete(self, *keys: str) -> int:
         """Deletes one or more keys. Returns count of deleted keys."""
         if not keys:

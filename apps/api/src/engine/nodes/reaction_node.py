@@ -15,6 +15,7 @@ from src.models import (
     GameState,
     Phase,
     PublicMessage,
+    Role,
     SystemAnnouncement,
 )
 
@@ -71,6 +72,7 @@ async def reaction_node(
         eliminated_agent,
         eliminated_id,
         fallback_text="*remains silent as they are dragged away*",
+        is_eliminated_agent=True,
     )
 
     eliminated_agent_config = next(
@@ -122,17 +124,52 @@ async def reaction_node(
     # --- Sequence 3: Survivor Reactions ---
     alive_survivor_ids = [aid for aid, alive in state.agent_alive.items() if alive]
 
+    # Pre-calculate outcome context
+    imposter_id = state.imposter_id
+    game_outcome = "villagers_win" if eliminated_id == imposter_id else "imposter_wins"
+    outcome_statement = (
+        "The Villagers have won the game!"
+        if game_outcome == "villagers_win"
+        else "The Imposter has won the game!"
+    )
+
+    agent_names = {a.agent_id: a.display_name for a in state.config.agents}
+    eliminated_name = agent_names.get(eliminated_id, "unknown")
+
     # Gather survivor reactions concurrently
+    async def get_survivor_reaction(aid):
+        vote = next((vr for vr in state.vote_records if vr.voter_agent_id == aid), None)
+        vote_target_name = agent_names.get(vote.target_agent_id, "unknown") if vote else "unknown"
+
+        voted_correctly = vote is not None and vote.target_agent_id == eliminated_id
+        vote_correct_status = "YES — you voted for the right person." if voted_correctly else "NO — you voted for the wrong person."
+
+        agent_role = state.role_assignments[aid].role
+        is_imposter = agent_role == Role.IMPOSTER
+        won_game = (
+            (game_outcome == "villagers_win" and not is_imposter)
+            or (game_outcome == "imposter_wins" and is_imposter)
+        )
+        you_won_status = "YOU WON this game." if won_game else "YOU LOST this game."
+
+        return await _react_with_fallback(
+            state,
+            agents[aid],
+            aid,
+            fallback_text="*looks shocked and stays silent*",
+            is_eliminated_agent=False,
+            eliminated_agent_name=eliminated_name,
+            eliminated_role=eliminated_role,
+            outcome_statement=outcome_statement,
+            last_words=last_words_res.statement,
+            agent_vote_target=vote_target_name,
+            game_outcome=game_outcome,
+            vote_correct_status=vote_correct_status,
+            you_won_status=you_won_status,
+        )
+
     survivor_results: list[_ReactionResult] = await asyncio.gather(
-        *[
-            _react_with_fallback(
-                state,
-                agents[aid],
-                aid,
-                fallback_text="*looks shocked and stays silent*",
-            )
-            for aid in alive_survivor_ids
-        ]
+        *[get_survivor_reaction(aid) for aid in alive_survivor_ids]
     )
 
     # Shuffle the results to avoid predictable reaction order in chat
@@ -166,18 +203,31 @@ async def reaction_node(
 
 
 async def _react_with_fallback(
-    state: GameState, agent, agent_id: str, fallback_text: str
+    state: GameState, agent, agent_id: str, fallback_text: str, **kwargs
 ) -> _ReactionResult:
     """
-    Calls agent.react(context).
+    Calls agent.react(context, **kwargs).
     On invalid/failure: re-prompt once.
     On 2nd invalid: uses fallback_text.
     """
+    import inspect
     context = ContextBuilder.build(state, agent_id)
+
+    # Inspect the signature of agent.react to avoid TypeError on mock agents in tests
+    sig = inspect.signature(agent.react)
+    has_var_keyword = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+
+    passed_kwargs = {}
+    if has_var_keyword:
+        passed_kwargs = kwargs
+    else:
+        for k, v in kwargs.items():
+            if k in sig.parameters:
+                passed_kwargs[k] = v
 
     for _attempt in range(2):
         try:
-            output = await agent.react(context)
+            output = await agent.react(context, **passed_kwargs)
             if (
                 output
                 and hasattr(output, "public_statement")

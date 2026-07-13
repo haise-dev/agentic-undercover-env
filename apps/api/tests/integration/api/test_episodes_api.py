@@ -88,6 +88,12 @@ async def test_post_episode_valid(client, valid_episode_config_dict):
         assert args[0].startswith("pending_episode:")
         # Should have a TTL
         assert kwargs.get("ex") is not None
+        
+        # Verify agents got correct api_key_index auto-assigned
+        cached_config_dict = json.loads(args[1])
+        agents_cached = cached_config_dict["agents"]
+        for idx, agent in enumerate(agents_cached):
+            assert agent["api_key_index"] == idx + 1
 
 
 @pytest.mark.asyncio

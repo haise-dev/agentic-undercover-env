@@ -6,6 +6,7 @@ from src.engine.context_builder import ContextBuilder
 from src.engine.event_emitter import (
     EVT_ELIMINATION_RESULT,
     EVT_VOTE_CAST,
+    EVT_VOTING_STARTED,
     EventEmitter,
 )
 from src.engine.exceptions import NodeError, RateLimitError
@@ -57,6 +58,13 @@ async def voting_node(
         raise ValueError(
             f"voting_node requires Phase.VOTING, got {state.current_phase}"
         )
+
+    await emitter.emit(
+        EVT_VOTING_STARTED,
+        {
+            "round_number": state.current_round,
+        },
+    )
 
     alive_ids = [
         aid for aid in state.current_turn_order if state.agent_alive.get(aid, False)
@@ -112,6 +120,7 @@ async def voting_node(
                 "voter_agent_id": r.voter_agent_id,
                 "target_agent_id": r.target_agent_id,
                 "round_number": state.current_round,
+                "inner_thought": r.inner_thought,
             },
         )
 
@@ -152,13 +161,16 @@ async def _vote_with_fallback(state: GameState, agent, agent_id: str) -> _VoteRe
     for _attempt in range(2):
         try:
             output = await agent.vote(context)
-            if _is_valid_vote(output, agent_id, state):
-                return _VoteResult(
-                    voter_agent_id=agent_id,
-                    target_agent_id=output.vote_target,
-                    inner_thought=output.inner_thought,
-                    used_fallback=False,
-                )
+            if isinstance(output, VotingOutput):
+                resolved_id = _resolve_agent_id(output.vote_target, state)
+                # Ensure it's not a self-vote and is a valid alive agent
+                if resolved_id and resolved_id != agent_id:
+                    return _VoteResult(
+                        voter_agent_id=agent_id,
+                        target_agent_id=resolved_id,
+                        inner_thought=output.inner_thought,
+                        used_fallback=False,
+                    )
         except RateLimitError:
             raise
         except Exception:
@@ -174,13 +186,26 @@ async def _vote_with_fallback(state: GameState, agent, agent_id: str) -> _VoteRe
     )
 
 
-def _is_valid_vote(output: object, voter_agent_id: str, state: GameState) -> bool:
-    """Returns True if vote_target is alive and not a self-vote."""
-    if not isinstance(output, VotingOutput):
-        return False
-    target = output.vote_target
-    return (
-        target != voter_agent_id
-        and target in state.agent_alive
-        and state.agent_alive[target]
-    )
+def _resolve_agent_id(target: str, state: GameState) -> str | None:
+    """
+    Resolves a target string (which could be an agent_id or a display_name)
+    to a valid agent_id from the alive agents.
+    Returns None if not resolvable or if target agent is dead.
+    """
+    if not target or not isinstance(target, str):
+        return None
+
+    # 1. Try resolving as a direct agent_id
+    target_id = target.strip()
+    if target_id in state.agent_alive and state.agent_alive[target_id]:
+        return target_id
+
+    # 2. Try resolving as a display_name (case-insensitive, stripped)
+    target_clean = target_id.lower()
+    for agent in state.config.agents:
+        if agent.display_name.strip().lower() == target_clean:
+            aid = agent.agent_id
+            if state.agent_alive.get(aid, False):
+                return aid
+
+    return None

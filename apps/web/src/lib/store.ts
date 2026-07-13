@@ -1,12 +1,8 @@
 import { create } from "zustand";
 
-export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
+import { GameEvent } from "./types";
 
-export interface GameEvent {
-  event_type: string;
-  timestamp: string;
-  payload: any;
-}
+export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 
 interface GameState {
   events: GameEvent[];

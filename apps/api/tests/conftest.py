@@ -41,7 +41,8 @@ def llm_config() -> AgentLLMConfig:
     """Default AI agent LLM config using Groq (free tier)."""
     return AgentLLMConfig(
         provider=LLMProvider.GROQ,
-        model_name="llama-3.3-70b-versatile",
+        smart_model_name="llama-3.3-70b-versatile",
+        fast_model_name="llama3-8b-8192",
     )
 
 

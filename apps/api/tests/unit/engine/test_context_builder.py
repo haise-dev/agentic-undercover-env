@@ -72,8 +72,9 @@ def test_context_builder_speaking_history_filtering(game_state):
     game_state.all_messages.extend([msg1, msg2, msg3])
 
     ctx = ContextBuilder.build(game_state, "agent_1")
-    assert len(ctx.public_history) == 1
-    assert ctx.public_history[0].content == "R2 Speaking"
+    assert len(ctx.public_history) == 2
+    assert ctx.public_history[0].content == "R1 Speaking"
+    assert ctx.public_history[1].content == "R2 Speaking"
 
 
 def test_context_builder_deliberation_history(game_state):
@@ -227,7 +228,8 @@ def test_context_builder_empty_round_history(game_state):
 
     # Round 2 is empty
     ctx = ContextBuilder.build(game_state, "agent_1")
-    assert len(ctx.public_history) == 0
+    assert len(ctx.public_history) == 1
+    assert ctx.public_history[0].content == "R1"
 
 
 def test_context_builder_partial_round_history(game_state):

@@ -38,10 +38,14 @@ def test_settings_api_keys_are_masked(monkeypatch):
 
 
 def test_get_llm_key_retrieves_raw_keys(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
-    monkeypatch.setenv("GROQ_API_KEY", "gsk-groq")
+    monkeypatch.setenv("GROQ_API_KEY_1", "gsk-groq-1")
+    monkeypatch.setenv("GROQ_API_KEY_2", "gsk-groq-2")
     settings = Settings()
     assert get_llm_key(settings, "openai") == "sk-openai"
-    assert get_llm_key(settings, "groq") == "gsk-groq"
+    assert get_llm_key(settings, "groq", index=1) == "gsk-groq-1"
+    assert get_llm_key(settings, "groq", index=2) == "gsk-groq-2"
+    assert get_llm_key(settings, "groq", index=3) == "gsk-groq-1"
     assert get_llm_key(settings, "gemini") is None
     assert get_llm_key(settings, "unknown") is None

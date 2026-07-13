@@ -67,8 +67,8 @@ class MockAgent:
             raise result
         return result
 
-    async def react(self, context):
-        self.react_calls.append({"context": context})
+    async def react(self, context, **kwargs):
+        self.react_calls.append({"context": context, **kwargs})
         result = next(self._react_outputs)
         if isinstance(result, Exception):
             raise result

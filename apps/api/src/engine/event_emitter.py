@@ -20,7 +20,9 @@ EVT_AGENT_SPOKE = "AGENT_SPOKE"
 EVT_AGENT_DELIBERATED = "AGENT_DELIBERATED"
 
 # Voting constants
+EVT_POLLING_STARTED = "POLLING_STARTED"
 EVT_POLL_RESULT = "POLL_RESULT"
+EVT_VOTING_STARTED = "VOTING_STARTED"
 EVT_VOTE_CAST = "VOTE_CAST"
 EVT_ELIMINATION_RESULT = "ELIMINATION_RESULT"
 
@@ -100,8 +102,7 @@ class EventEmitter:
             await self.redis_client.publish(self.channel, envelope)
 
             # Also push to the event history list and reset TTL
-            envelope_str = json.dumps(envelope)
-            await self.redis_client.rpush(self.list_key, envelope_str)
+            await self.redis_client.rpush(self.list_key, json.dumps(envelope))
             await self.redis_client.expire(self.list_key, 3600)  # 1 hour TTL
 
             logger.debug("Emitted %s for episode %s", event_type, self.episode_id)

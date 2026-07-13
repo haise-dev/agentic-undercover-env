@@ -108,3 +108,26 @@ async def test_invoke_with_retry_network_failure_max_retries(mock_chain):
         
     # Tenacity stops at 3 attempts
     assert mock_chain.ainvoke.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_invoke_with_retry_rate_limit_error(mock_chain):
+    from src.engine.exceptions import RateLimitError
+    # We simulate an exception that looks like a rate limit error
+    class FakeRateLimitException(Exception):
+        pass
+    error = FakeRateLimitException("Rate limit exceeded 429")
+    
+    mock_chain.ainvoke.side_effect = [error, error, error]
+    
+    messages = [SystemMessage(content="You are an agent.")]
+    
+    import src.agents.retry
+    src.agents.retry.RETRY_WAIT_SECONDS = 0.01
+
+    with pytest.raises(RateLimitError) as exc_info:
+        await invoke_with_retry(mock_chain, messages, "agent_1", Phase.SPEAKING, provider="gemini")
+        
+    assert exc_info.value.provider == "gemini"
+    assert "Rate limit hit for provider gemini" in str(exc_info.value)
+

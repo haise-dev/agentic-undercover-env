@@ -36,6 +36,13 @@ async def create_episode(config: EpisodeConfig) -> EpisodeCreateResponse:
     The episode_id must be provided or one will be generated (by EpisodeConfig).
     The episode is not persisted to PostgreSQL until it completes running.
     """
+    # Auto-assign api_key_index (1 to 4) to agents to isolate API keys
+    updated_agents = []
+    for i, agent in enumerate(config.agents):
+        updated_agent = agent.model_copy(update={"api_key_index": i + 1})
+        updated_agents.append(updated_agent)
+    config = config.model_copy(update={"agents": updated_agents})
+
     episode_id = config.episode_id
 
     try:

@@ -31,11 +31,24 @@ def test_get_llm_client_gemini():
 
 def test_get_llm_client_groq():
     config = AgentLLMConfig(provider=LLMProvider.GROQ, model_name="llama-3.3-70b-versatile")
-    settings = Settings(GROQ_API_KEY="dummy-key")
+    settings = Settings(GROQ_API_KEY_1="dummy-key")
     
     client = get_llm_client(config, settings)
     assert isinstance(client, ChatGroq)
     assert client.model_name == "llama-3.3-70b-versatile"
+
+
+def test_get_llm_client_groq_indexed():
+    config = AgentLLMConfig(provider=LLMProvider.GROQ, model_name="llama-3.3-70b-versatile")
+    settings = Settings(GROQ_API_KEY_1="dummy-1", GROQ_API_KEY_2="dummy-2")
+    
+    client1 = get_llm_client(config, settings, api_key_index=1)
+    assert isinstance(client1, ChatGroq)
+    assert client1.groq_api_key.get_secret_value() == "dummy-1"
+
+    client2 = get_llm_client(config, settings, api_key_index=2)
+    assert isinstance(client2, ChatGroq)
+    assert client2.groq_api_key.get_secret_value() == "dummy-2"
 
 
 def test_get_llm_client_deepseek():
@@ -50,10 +63,10 @@ def test_get_llm_client_deepseek():
 
 def test_get_llm_client_missing_api_key():
     config = AgentLLMConfig(provider=LLMProvider.GROQ, model_name="llama3")
-    settings = Settings(GROQ_API_KEY=None)
+    settings = Settings(GROQ_API_KEY_1=None)
     
-    with pytest.raises(ValueError, match="GROQ_API_KEY is not configured"):
-        get_llm_client(config, settings)
+    with pytest.raises(ValueError, match="GROQ_API_KEY_1 is not configured"):
+        get_llm_client(config, settings, api_key_index=1)
 
 
 def test_get_llm_client_unsupported_provider():
@@ -64,3 +77,20 @@ def test_get_llm_client_unsupported_provider():
     
     with pytest.raises(ValueError, match="Unsupported LLM provider: UNSUPPORTED_PROVIDER"):
         get_llm_client(config, settings)
+
+
+def test_get_llm_client_explicit_model_name():
+    config = AgentLLMConfig(
+        provider=LLMProvider.GROQ,
+        smart_model_name="smart-70b",
+        fast_model_name="fast-8b"
+    )
+    settings = Settings(GROQ_API_KEY_1="dummy-key")
+    
+    # Passing no model_name should use smart_model_name
+    client = get_llm_client(config, settings)
+    assert client.model_name == "smart-70b"
+
+    # Passing explicit model_name should use it
+    client_fast = get_llm_client(config, settings, model_name="fast-8b")
+    assert client_fast.model_name == "fast-8b"

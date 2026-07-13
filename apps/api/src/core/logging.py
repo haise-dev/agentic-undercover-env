@@ -38,6 +38,6 @@ def log_startup_status(settings) -> None:
         "LLM providers configured: openai=%s gemini=%s groq=%s deepseek=%s",
         settings.OPENAI_API_KEY is not None,
         settings.GEMINI_API_KEY is not None,
-        settings.GROQ_API_KEY is not None,
+        settings.GROQ_API_KEY_1 is not None,
         settings.DEEPSEEK_API_KEY is not None,
     )

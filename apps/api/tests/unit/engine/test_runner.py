@@ -15,7 +15,9 @@ from src.engine.event_emitter import (
     EVT_ROUND_STARTED,
     EVT_AGENT_SPOKE,
     EVT_AGENT_DELIBERATED,
+    EVT_POLLING_STARTED,
     EVT_POLL_RESULT,
+    EVT_VOTING_STARTED,
     EVT_VOTE_CAST,
     EVT_ELIMINATION_RESULT,
     EVT_LAST_WORDS,
@@ -152,12 +154,12 @@ async def test_runner_full_linear_pipeline(
     async for m in pubsub.listen():
         if m["type"] == "message":
             events.append(json.loads(m["data"].decode("utf-8")))
-            # Total events = 26:
-            # 1 GAME_START + 1 ROUND_STARTED + 4 AGENT_SPOKE + 8 AGENT_DELIBERATED + 1 POLL_RESULT + 4 VOTE_CAST + 1 ELIMINATION_RESULT + 1 LAST_WORDS + 1 ROLE_REVEAL + 3 SURVIVOR_REACTED + 1 GAME_OVER
-            if len(events) >= 26:
+            # Total events = 28:
+            # 1 GAME_START + 1 ROUND_STARTED + 4 AGENT_SPOKE + 8 AGENT_DELIBERATED + 1 POLLING_STARTED + 1 POLL_RESULT + 1 VOTING_STARTED + 4 VOTE_CAST + 1 ELIMINATION_RESULT + 1 LAST_WORDS + 1 ROLE_REVEAL + 3 SURVIVOR_REACTED + 1 GAME_OVER
+            if len(events) >= 28:
                 break
 
-    assert len(events) == 26
+    assert len(events) == 28
     event_types = [e["event_type"] for e in events]
     
     assert event_types[0] == EVT_GAME_START
@@ -165,15 +167,17 @@ async def test_runner_full_linear_pipeline(
     assert event_types[2:6] == [EVT_AGENT_SPOKE] * 4
     # Deliberation events can come in shuffled turn order, but should be 8 of them
     assert event_types[6:14] == [EVT_AGENT_DELIBERATED] * 8
-    assert event_types[14] == EVT_POLL_RESULT
+    assert event_types[14] == EVT_POLLING_STARTED
+    assert event_types[15] == EVT_POLL_RESULT
+    assert event_types[16] == EVT_VOTING_STARTED
     # Votes can come in any order because they are concurrent
-    assert set(event_types[15:19]) == {EVT_VOTE_CAST}
-    assert event_types[19] == EVT_ELIMINATION_RESULT
-    assert event_types[20] == EVT_LAST_WORDS
-    assert event_types[21] == EVT_ROLE_REVEAL
+    assert set(event_types[17:21]) == {EVT_VOTE_CAST}
+    assert event_types[21] == EVT_ELIMINATION_RESULT
+    assert event_types[22] == EVT_LAST_WORDS
+    assert event_types[23] == EVT_ROLE_REVEAL
     # Reactions can come in any order
-    assert set(event_types[22:25]) == {EVT_SURVIVOR_REACTED}
-    assert event_types[25] == EVT_GAME_OVER
+    assert set(event_types[24:27]) == {EVT_SURVIVOR_REACTED}
+    assert event_types[27] == EVT_GAME_OVER
 
 
 @pytest.mark.asyncio
@@ -205,6 +209,10 @@ async def test_runner_rate_limit_error(episode_config, fake_redis, fake_redis_cl
     assert exc_info.value.provider == "openai"
     assert "Rate limit hit" in str(exc_info.value)
 
+    # Verify QuotaTracker marked provider "openai" as exhausted
+    from src.core.quota import QuotaTracker
+    assert await QuotaTracker.is_exhausted("openai") is True
+    
     # Collect and verify emitted events
     raw_events = await fake_redis_client.lrange(f"episode_events:{episode_config.episode_id}", 0, -1)
     events = [json.loads(e) for e in raw_events]

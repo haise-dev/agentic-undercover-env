@@ -3,6 +3,7 @@ import { Badge } from "../ui/Badge";
 import { UserCircle, Skull } from "lucide-react";
 import { useMemo } from "react";
 import { GameEvent } from "@/src/lib/types";
+import { APIMonitor } from "./APIMonitor";
 
 // Extract agents dynamically from INIT event, and update status from ELIMINATION_RESULT
 export function AgentRoster() {
@@ -19,7 +20,7 @@ export function AgentRoster() {
     // Process events chronologically to build current state
     events.forEach((ev) => {
       if (ev.event_type === "GAME_START" && ev.payload.agents) {
-        roster = ev.payload.agents.map((a: any) => ({ 
+        roster = ev.payload.agents.map((a) => ({ 
           name: a.display_name, 
           id: a.agent_id, 
           role: a.role,
@@ -81,6 +82,8 @@ export function AgentRoster() {
           );
         })}
       </div>
+      
+      <APIMonitor />
     </div>
   );
 }

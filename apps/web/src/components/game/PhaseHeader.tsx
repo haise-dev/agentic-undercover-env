@@ -15,7 +15,7 @@ export function PhaseHeader() {
     for (let i = events.length - 1; i >= 0; i--) {
       const ev = events[i];
       switch (ev.event_type) {
-        case "INIT": return { label: "INITIALIZING", icon: Zap, color: "text-agent-0" };
+        case "GAME_START": return { label: "INITIALIZING", icon: Zap, color: "text-agent-0" };
         case "AGENT_SPOKE": return { label: "DISCUSSION PHASE", icon: MessageSquare, color: "text-agent-1" };
         case "VOTE_CAST": return { label: "VOTING PHASE", icon: ShieldAlert, color: "text-agent-2" };
         case "ELIMINATION_RESULT": return { label: "ELIMINATION", icon: Skull, color: "text-agent-3" };

@@ -22,7 +22,10 @@ def test_log_startup_status_no_keys(caplog):
         REDIS_URL="redis://localhost:6379/0",
         OPENAI_API_KEY=None,
         GEMINI_API_KEY=None,
-        GROQ_API_KEY=None,
+        GROQ_API_KEY_1=None,
+        GROQ_API_KEY_2=None,
+        GROQ_API_KEY_3=None,
+        GROQ_API_KEY_4=None,
         DEEPSEEK_API_KEY=None,
     )
     with caplog.at_level(logging.INFO):
@@ -44,7 +47,7 @@ def test_log_startup_status_with_keys(caplog):
         REDIS_URL="redis://localhost:6379/0",
         OPENAI_API_KEY="sk-openai-val",
         GEMINI_API_KEY=None,
-        GROQ_API_KEY="gsk-groq-val",
+        GROQ_API_KEY_1="gsk-groq-val",
         DEEPSEEK_API_KEY=None,
     )
     with caplog.at_level(logging.INFO):

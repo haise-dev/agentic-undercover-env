@@ -1,6 +1,6 @@
 import asyncio
 import json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 
@@ -61,14 +61,18 @@ async def test_polling_node_concurrent_success_vote_now(game_state, mock_emitter
     assert records_dict["agent_3"].poll_vote == PollVote.SKIP
 
     # Verify event emitter
-    mock_emitter.emit.assert_called_once_with(
-        EVT_POLL_RESULT,
-        {
-            "vote_now_count": 2,
-            "skip_count": 2,
-            "forced": False,
-        }
-    )
+    assert mock_emitter.emit.call_count == 2
+    mock_emitter.emit.assert_has_calls([
+        call("POLLING_STARTED", {"round_number": 1}),
+        call(
+            EVT_POLL_RESULT,
+            {
+                "vote_now_count": 2,
+                "skip_count": 2,
+                "forced": False,
+            }
+        )
+    ])
 
 
 @pytest.mark.asyncio
@@ -87,14 +91,18 @@ async def test_polling_node_concurrent_success_skip(game_state, mock_emitter):
 
     assert result_state["proceed_to_vote"] is False
     
-    mock_emitter.emit.assert_called_once_with(
-        EVT_POLL_RESULT,
-        {
-            "vote_now_count": 1,
-            "skip_count": 3,
-            "forced": False,
-        }
-    )
+    assert mock_emitter.emit.call_count == 2
+    mock_emitter.emit.assert_has_calls([
+        call("POLLING_STARTED", {"round_number": 1}),
+        call(
+            EVT_POLL_RESULT,
+            {
+                "vote_now_count": 1,
+                "skip_count": 3,
+                "forced": False,
+            }
+        )
+    ])
 
 
 @pytest.mark.asyncio
@@ -120,14 +128,18 @@ async def test_polling_node_forced_vote_on_max_rounds(game_state, mock_emitter):
     for agent in agents.values():
         assert len(agent.poll_calls) == 0
 
-    mock_emitter.emit.assert_called_once_with(
-        EVT_POLL_RESULT,
-        {
-            "vote_now_count": 0,
-            "skip_count": 0,
-            "forced": True,
-        }
-    )
+    assert mock_emitter.emit.call_count == 2
+    mock_emitter.emit.assert_has_calls([
+        call("POLLING_STARTED", {"round_number": 3}),
+        call(
+            EVT_POLL_RESULT,
+            {
+                "vote_now_count": 0,
+                "skip_count": 0,
+                "forced": True,
+            }
+        )
+    ])
 
 
 @pytest.mark.asyncio

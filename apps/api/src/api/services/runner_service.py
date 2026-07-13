@@ -34,11 +34,11 @@ async def _run_episode_safe(episode_id: str, config: EpisodeConfig) -> None:
 
             runner = EpisodeRunner(agents=agents, redis_client=redis_client)
 
+            from contextlib import asynccontextmanager
+
             # Create an independent DB session for the background task
-            # get_session yields an AsyncSession
-            async for db_session in get_session():
+            async with asynccontextmanager(get_session)() as db_session:
                 await runner.run(config, db_session)
-                break  # only need one session
 
     except asyncio.CancelledError:
         logger.warning("Episode %s was cancelled", episode_id)

@@ -1,10 +1,12 @@
 from src.agents.prompt_templates import (
-    DELIBERATION_PHASE_PROMPT,
+    IMPOSTER_DELIBERATION_PROMPT,
+    IMPOSTER_SPEAKING_PROMPT,
     IMPOSTER_SYSTEM_PROMPT,
     POLLING_PHASE_PROMPT,
     REACTION_ELIMINATED_PROMPT,
     REACTION_SURVIVOR_PROMPT,
     SPEAKING_PHASE_PROMPT,
+    VILLAGER_DELIBERATION_PROMPT,
     VILLAGER_SYSTEM_PROMPT,
     VOTING_PHASE_PROMPT,
 )
@@ -17,10 +19,14 @@ def format_alive_agents(alive_agents: list[dict[str, str]]) -> str:
 
 
 def format_chat_history(messages: list[PublicMessage]) -> str:
-    """Formats public messages into [DisplayName]: Content lines."""
+    """Formats public messages into [Round X - Phase] [DisplayName]: Content lines."""
     if not messages:
         return ""
-    return "\n".join([f"[{msg.display_name}]: {msg.content}" for msg in messages])
+    formatted = []
+    for msg in messages:
+        phase_str = "Guess" if msg.phase == Phase.SPEAKING else "Discuss"
+        formatted.append(f"[Round {msg.round_number} - {phase_str}] [{msg.display_name}]: {msg.content}")
+    return "\n".join(formatted)
 
 
 def build_system_prompt(
@@ -60,31 +66,47 @@ def build_user_prompt(
     """Builds the phase-specific dynamic context block (user prompt)."""
     alive_agents_list = format_alive_agents(context.alive_agents)
 
-    # Filter public_history depending on phase logic if needed, but for now we just show all context history.
-    # Actually, context.public_history usually only contains the current round's history or all, depending on engine.
-    chat_history = format_chat_history(
-        [m for m in context.public_history if m.phase == Phase.SPEAKING]
-    )
-    deliberation_history = format_chat_history(
-        [m for m in context.public_history if m.phase == Phase.DELIBERATION]
-    )
+    # Separate history into past rounds and current round events
+    past_history_msgs = [m for m in context.public_history if m.round_number < context.current_round]
+    current_chat_msgs = [
+        m for m in context.public_history
+        if m.round_number == context.current_round and m.phase == Phase.SPEAKING
+    ]
+    current_delib_msgs = [
+        m for m in context.public_history
+        if m.round_number == context.current_round and m.phase == Phase.DELIBERATION
+    ]
+
+    past_history = format_chat_history(past_history_msgs)
+    chat_history = format_chat_history(current_chat_msgs)
+    deliberation_history = format_chat_history(current_delib_msgs)
 
     format_kwargs = {
         "round_number": context.current_round,
         "deliberation_round": context.deliberation_round,
         "alive_agents_list": alive_agents_list,
+        "past_history": past_history,
         "chat_history": chat_history,
         "deliberation_history": deliberation_history,
+        "game_language": context.game_language,
         "is_final_round_notice": "This is the FINAL ROUND. A vote will be forced after deliberation."
         if context.is_final_round
         else "",
+        "topic": context.role_assignment.topic,
+        "secret_word": context.role_assignment.secret_word or "",
     }
 
     if phase == Phase.SPEAKING:
-        return SPEAKING_PHASE_PROMPT.format(**format_kwargs)
+        if context.role_assignment.role == Role.IMPOSTER:
+            return IMPOSTER_SPEAKING_PROMPT.format(**format_kwargs)
+        else:
+            return SPEAKING_PHASE_PROMPT.format(**format_kwargs)
 
     elif phase == Phase.DELIBERATION:
-        return DELIBERATION_PHASE_PROMPT.format(**format_kwargs)
+        if context.role_assignment.role == Role.IMPOSTER:
+            return IMPOSTER_DELIBERATION_PROMPT.format(**format_kwargs)
+        else:
+            return VILLAGER_DELIBERATION_PROMPT.format(**format_kwargs)
 
     elif phase == Phase.POLLING:
         return POLLING_PHASE_PROMPT.format(**format_kwargs)
@@ -96,11 +118,17 @@ def build_user_prompt(
         is_eliminated_agent = kwargs.get("is_eliminated_agent", False)
 
         if is_eliminated_agent:
-            return REACTION_ELIMINATED_PROMPT.format(agent_name=current_agent_name)
+            return REACTION_ELIMINATED_PROMPT.format(
+                agent_name=current_agent_name,
+                game_language=context.game_language
+            )
         else:
             eliminated_role = kwargs.get("eliminated_role", "unknown")
             if isinstance(eliminated_role, Role):
                 eliminated_role = eliminated_role.value
+
+            agent_vote_target = kwargs.get("agent_vote_target", "unknown")
+            game_outcome = kwargs.get("game_outcome", "unknown")
 
             return REACTION_SURVIVOR_PROMPT.format(
                 agent_name=current_agent_name,
@@ -108,6 +136,11 @@ def build_user_prompt(
                 eliminated_role=eliminated_role,
                 outcome_statement=kwargs.get("outcome_statement", ""),
                 last_words=kwargs.get("last_words", ""),
+                agent_vote_target=agent_vote_target,
+                game_outcome=game_outcome,
+                vote_correct_status=kwargs.get("vote_correct_status", "unknown"),
+                you_won_status=kwargs.get("you_won_status", "unknown"),
+                game_language=context.game_language,
             )
 
     else:

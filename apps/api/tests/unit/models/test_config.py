@@ -7,15 +7,31 @@ from src.models.enums import AgentType, LLMProvider
 
 def test_agent_llm_config_defaults():
     config = AgentLLMConfig(
-        provider=LLMProvider.GROQ, model_name="llama-3.3-70b-versatile"
+        provider=LLMProvider.GROQ,
+        smart_model_name="smart-70b",
+        fast_model_name="fast-8b"
     )
     assert config.temperature == 0.8
     assert config.max_tokens is None
+    assert config.smart_model_name == "smart-70b"
+    assert config.fast_model_name == "fast-8b"
+
+
+def test_agent_llm_config_fallback():
+    # Test backward compatibility where only model_name is provided
+    config = AgentLLMConfig(
+        provider=LLMProvider.GROQ,
+        model_name="fallback-model"
+    )
+    assert config.smart_model_name == "fallback-model"
+    assert config.fast_model_name == "fallback-model"
 
 
 def test_agent_llm_config_frozen():
     config = AgentLLMConfig(
-        provider=LLMProvider.GROQ, model_name="llama-3.3-70b-versatile"
+        provider=LLMProvider.GROQ,
+        smart_model_name="smart-70b",
+        fast_model_name="fast-8b"
     )
     with pytest.raises(ValidationError):
         config.temperature = 0.5
@@ -46,6 +62,43 @@ def test_agent_config_human_type():
     )
     assert agent.agent_type == AgentType.HUMAN
     assert agent.llm_config is None
+    assert agent.api_key_index == 1
+
+
+def test_agent_config_api_key_index_validation():
+    # Valid index
+    for idx in range(1, 5):
+        agent = AgentConfig(
+            agent_id="agent_0",
+            display_name="Alice",
+            display_color="cyan",
+            agent_type=AgentType.HUMAN,
+            llm_config=None,
+            api_key_index=idx,
+        )
+        assert agent.api_key_index == idx
+
+    # Invalid index < 1
+    with pytest.raises(ValidationError):
+        AgentConfig(
+            agent_id="agent_0",
+            display_name="Alice",
+            display_color="cyan",
+            agent_type=AgentType.HUMAN,
+            llm_config=None,
+            api_key_index=0,
+        )
+
+    # Invalid index > 4
+    with pytest.raises(ValidationError):
+        AgentConfig(
+            agent_id="agent_0",
+            display_name="Alice",
+            display_color="cyan",
+            agent_type=AgentType.HUMAN,
+            llm_config=None,
+            api_key_index=5,
+        )
 
 
 def test_episode_config_exactly_four_agents():

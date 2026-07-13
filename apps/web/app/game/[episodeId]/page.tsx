@@ -11,6 +11,7 @@ import { EndgameCard } from "@/src/components/game/EndgameCard";
 import { useGameStream } from "@/src/lib/useGameStream";
 import { API_BASE_URL } from "@/src/lib/constants";
 import { useGameStore } from "@/src/lib/store";
+import { APIMonitor } from "@/src/components/game/APIMonitor";
 
 export default function GamePage({ params }: { params: Promise<{ episodeId: string }> }) {
   const { episodeId } = use(params);
@@ -24,8 +25,8 @@ export default function GamePage({ params }: { params: Promise<{ episodeId: stri
   useEffect(() => {
     if (connectionStatus === "connected" && !startTriggered.current) {
       // If we don't have any INIT event, it's a brand new game
-      const hasInit = events.some(e => e.event_type === "INIT");
-      if (!hasInit) {
+      const hasStart = events.some(e => e.event_type === "GAME_START");
+      if (!hasStart) {
         startTriggered.current = true;
         fetch(`${API_BASE_URL}/api/episodes/${episodeId}/start`, {
           method: "POST"
@@ -55,6 +56,10 @@ export default function GamePage({ params }: { params: Promise<{ episodeId: stri
           <ChatFeed />
         </div>
       </AppShell>
+
+      <div className="block md:hidden mt-6 px-4 pb-8">
+        <APIMonitor />
+      </div>
     </div>
   );
 }

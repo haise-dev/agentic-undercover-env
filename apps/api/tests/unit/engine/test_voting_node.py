@@ -8,11 +8,12 @@ import pytest
 from src.engine.event_emitter import (
     EVT_ELIMINATION_RESULT,
     EVT_VOTE_CAST,
+    EVT_VOTING_STARTED,
     EventEmitter,
 )
 from src.engine.exceptions import NodeError
 from src.engine.nodes.voting_node import (
-    _is_valid_vote,
+    _resolve_agent_id,
     voting_node,
 )
 from src.models import GameState, Phase, VotingOutput
@@ -194,23 +195,26 @@ async def test_voting_node_exception_fallback(voting_state, mock_emitter):
     assert records_dict["agent_0"].inner_thought == ""
 
 
-def test_is_valid_vote_helper(voting_state):
-    # Valid vote
-    assert _is_valid_vote(ok_vote("agent_1"), "agent_0", voting_state) is True
+def test_resolve_agent_id_helper(voting_state):
+    # Valid direct agent_id
+    assert _resolve_agent_id("agent_1", voting_state) == "agent_1"
 
-    # Self-vote
-    assert _is_valid_vote(ok_vote("agent_0"), "agent_0", voting_state) is False
+    # Valid display name (case-insensitive and whitespace)
+    assert _resolve_agent_id("Bob", voting_state) == "agent_1"
+    assert _resolve_agent_id("  bob  ", voting_state) == "agent_1"
 
-    # Dead agent vote
+    # Dead agent (Charlie is agent_2)
     voting_state.agent_alive["agent_2"] = False
-    assert _is_valid_vote(ok_vote("agent_2"), "agent_0", voting_state) is False
+    assert _resolve_agent_id("agent_2", voting_state) is None
+    assert _resolve_agent_id("Charlie", voting_state) is None
 
-    # Non-existent agent vote
-    assert _is_valid_vote(ok_vote("agent_99"), "agent_0", voting_state) is False
+    # Non-existent target
+    assert _resolve_agent_id("agent_99", voting_state) is None
+    assert _resolve_agent_id("Nonexistent", voting_state) is None
 
-    # Invalid type
-    assert _is_valid_vote("agent_1", "agent_0", voting_state) is False
-    assert _is_valid_vote(None, "agent_0", voting_state) is False
+    # Invalid input types
+    assert _resolve_agent_id(None, voting_state) is None
+    assert _resolve_agent_id(123, voting_state) is None
 
 
 @pytest.mark.asyncio
@@ -287,19 +291,22 @@ async def test_voting_node_event_emission_integration(
 
     state = await voting_node(voting_state, agents, emitter)
 
-    # Retrieve all 5 events
+    # Retrieve all 6 events
     events = []
     async for m in pubsub.listen():
         if m["type"] == "message":
             events.append(json.loads(m["data"].decode("utf-8")))
-            if len(events) == 5:
+            if len(events) == 6:
                 break
 
-    assert len(events) == 5
+    assert len(events) == 6
 
-    # Verify first 4 events are VOTE_CAST
+    # Verify first event is VOTING_STARTED
+    assert events[0]["event_type"] == EVT_VOTING_STARTED
+
+    # Verify next 4 events are VOTE_CAST
     vote_cast_voters = []
-    for i in range(4):
+    for i in range(1, 5):
         evt = events[i]
         assert evt["event_type"] == EVT_VOTE_CAST
         assert evt["episode_id"] == voting_state.episode_id
@@ -308,17 +315,15 @@ async def test_voting_node_event_emission_integration(
         assert payload["round_number"] == voting_state.current_round
         assert "voter_agent_id" in payload
         assert "target_agent_id" in payload
-        assert "inner_thought" not in payload  # Privacy guard check
-        assert "t0" not in json.dumps(evt)
-        assert "t1" not in json.dumps(evt)
+        assert "inner_thought" in payload  # Now included for UI experience
 
         vote_cast_voters.append(payload["voter_agent_id"])
 
     # Ordering is based on turn_order iteration (stable order)
     assert vote_cast_voters == ["agent_0", "agent_1", "agent_2", "agent_3"]
 
-    # Verify 5th event is ELIMINATION_RESULT
-    evt_elim = events[4]
+    # Verify 6th event is ELIMINATION_RESULT
+    evt_elim = events[5]
     assert evt_elim["event_type"] == EVT_ELIMINATION_RESULT
     assert evt_elim["episode_id"] == voting_state.episode_id
     

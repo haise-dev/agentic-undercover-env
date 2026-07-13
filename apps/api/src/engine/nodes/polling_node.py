@@ -3,6 +3,7 @@ import asyncio
 from src.engine.context_builder import ContextBuilder
 from src.engine.event_emitter import (
     EVT_POLL_RESULT,
+    EVT_POLLING_STARTED,
     EventEmitter,
 )
 from src.engine.exceptions import AgentOutputError, RateLimitError
@@ -38,6 +39,13 @@ async def polling_node(
     is_graph_state = isinstance(state, dict) and "game_state" in state
     game_state = state["game_state"] if is_graph_state else state
     game_state.current_phase = Phase.POLLING
+
+    await emitter.emit(
+        EVT_POLLING_STARTED,
+        {
+            "round_number": game_state.current_round,
+        },
+    )
 
     is_forced = game_state.current_round >= game_state.config.max_rounds
 

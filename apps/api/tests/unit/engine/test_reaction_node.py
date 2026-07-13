@@ -243,3 +243,51 @@ async def test_reaction_node_event_emission_integration(
         assert "t3" not in json.dumps(events[i])
 
     assert survivor_event_agents == {"agent_0", "agent_2", "agent_3"}
+
+
+@pytest.mark.asyncio
+async def test_reaction_node_precomputed_facts(reaction_state, mock_emitter):
+    from src.models import VoteRecord
+    
+    # Setup voting records
+    # agent_0: Imposter. Voted for agent_1 (eliminated agent -> Correct!)
+    # agent_2: Villager. Voted for agent_2 (incorrect!)
+    # agent_3: Villager. Voted for agent_1 (correct!)
+    reaction_state.vote_records = [
+        VoteRecord(voter_agent_id="agent_0", target_agent_id="agent_1", inner_thought=""),
+        VoteRecord(voter_agent_id="agent_2", target_agent_id="agent_2", inner_thought=""),
+        VoteRecord(voter_agent_id="agent_3", target_agent_id="agent_1", inner_thought=""),
+    ]
+    
+    agents = {
+        "agent_0": MockAgent(react_outputs=[ok_react("Imposter react")]),
+        "agent_1": MockAgent(react_outputs=[ok_react("My last words")]),
+        "agent_2": MockAgent(react_outputs=[ok_react("Villager 2 react")]),
+        "agent_3": MockAgent(react_outputs=[ok_react("Villager 3 react")]),
+    }
+    
+    await reaction_node(reaction_state, agents, mock_emitter)
+    
+    # Since agent_1 (Villager) was eliminated, game_outcome is "imposter_wins".
+    # agent_0 (Imposter) -> won. Voted for agent_1 -> correct.
+    # agent_2 (Villager) -> lost. Voted for agent_2 -> incorrect.
+    # agent_3 (Villager) -> lost. Voted for agent_1 -> correct.
+    
+    # Check agent_0's call
+    agent_0_calls = agents["agent_0"].react_calls
+    assert len(agent_0_calls) == 1
+    assert agent_0_calls[0]["vote_correct_status"] == "YES — you voted for the right person."
+    assert agent_0_calls[0]["you_won_status"] == "YOU WON this game."
+    
+    # Check agent_2's call
+    agent_2_calls = agents["agent_2"].react_calls
+    assert len(agent_2_calls) == 1
+    assert agent_2_calls[0]["vote_correct_status"] == "NO — you voted for the wrong person."
+    assert agent_2_calls[0]["you_won_status"] == "YOU LOST this game."
+    
+    # Check agent_3's call
+    agent_3_calls = agents["agent_3"].react_calls
+    assert len(agent_3_calls) == 1
+    assert agent_3_calls[0]["vote_correct_status"] == "YES — you voted for the right person."
+    assert agent_3_calls[0]["you_won_status"] == "YOU LOST this game."
+

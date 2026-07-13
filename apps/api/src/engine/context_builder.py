@@ -96,19 +96,21 @@ class ContextBuilder:
         current_round = state.current_round
 
         if phase == Phase.SPEAKING:
-            # Current round SPEAKING messages only
+            # All past messages + current round SPEAKING messages so far
             return [
                 m
                 for m in state.all_messages
-                if m.round_number == current_round and m.phase == Phase.SPEAKING
+                if m.round_number < current_round or (m.round_number == current_round and m.phase == Phase.SPEAKING)
             ]
         elif phase in (Phase.DELIBERATION, Phase.POLLING, Phase.VOTING):
-            # Speaking and Deliberation messages from current round
+            # All past messages + current round Speaking and Deliberation messages so far
             return [
                 m
                 for m in state.all_messages
-                if m.round_number == current_round
-                and m.phase in (Phase.SPEAKING, Phase.DELIBERATION)
+                if m.round_number < current_round or (
+                    m.round_number == current_round
+                    and m.phase in (Phase.SPEAKING, Phase.DELIBERATION)
+                )
             ]
         elif phase == Phase.REACTION:
             # Full history across all rounds

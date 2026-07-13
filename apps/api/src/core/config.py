@@ -9,7 +9,10 @@ class Settings(BaseSettings):
     REDIS_URL: str
     OPENAI_API_KEY: SecretStr | None = None
     GEMINI_API_KEY: SecretStr | None = None
-    GROQ_API_KEY: SecretStr | None = None
+    GROQ_API_KEY_1: SecretStr | None = None
+    GROQ_API_KEY_2: SecretStr | None = None
+    GROQ_API_KEY_3: SecretStr | None = None
+    GROQ_API_KEY_4: SecretStr | None = None
     DEEPSEEK_API_KEY: SecretStr | None = None
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
@@ -24,18 +27,31 @@ class Settings(BaseSettings):
     )
 
 
-def get_llm_key(settings: Settings, provider: str) -> str | None:
+def get_llm_key(settings: Settings, provider: str, index: int = 1) -> str | None:
     """
     Retrieves the actual API key string for a given LLM provider.
     Returns None if the key is not configured.
 
     Args:
         provider: One of "openai", "gemini", "groq", "deepseek"
+        index: API key index (1 to 4) for multi-key support (primarily Groq)
     """
+    if provider.lower() == "groq":
+        key_map = {
+            1: settings.GROQ_API_KEY_1,
+            2: settings.GROQ_API_KEY_2,
+            3: settings.GROQ_API_KEY_3,
+            4: settings.GROQ_API_KEY_4,
+        }
+        secret = key_map.get(index)
+        # Fallback to GROQ_API_KEY_1 if index is invalid or key is not provided
+        if secret is None and index != 1:
+            secret = settings.GROQ_API_KEY_1
+        return secret.get_secret_value() if secret is not None else None
+
     key_map = {
         "openai": settings.OPENAI_API_KEY,
         "gemini": settings.GEMINI_API_KEY,
-        "groq": settings.GROQ_API_KEY,
         "deepseek": settings.DEEPSEEK_API_KEY,
     }
     secret = key_map.get(provider.lower())

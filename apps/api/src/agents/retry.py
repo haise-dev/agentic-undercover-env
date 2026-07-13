@@ -30,13 +30,41 @@ def _is_network_error(e: BaseException) -> bool:
     return not _is_semantic_error(e)
 
 
+def _is_rate_limit_error(e: BaseException) -> bool:
+    err_type = type(e).__name__
+    err_module = type(e).__module__
+    
+    if err_type in ("RateLimitError", "ResourceExhausted"):
+        return True
+        
+    if "google.api_core.exceptions" in err_module and err_type == "ResourceExhausted":
+        return True
+    if "openai" in err_module and err_type == "RateLimitError":
+        return True
+    if "groq" in err_module and err_type == "RateLimitError":
+        return True
+        
+    err_str = str(e).lower()
+    if "rate limit" in err_str or "resourceexhausted" in err_str or "429" in err_str:
+        return True
+        
+    return False
+
+
+
+
 async def invoke_with_retry(
-    chain, messages: list[BaseMessage], agent_id: str, phase: Phase
-) -> BaseModel:
+    chain,
+    messages: list[BaseMessage],
+    agent_id: str,
+    phase: Phase,
+    provider: str = "unknown",
+) -> dict | BaseModel:
     """
     Invokes a LangChain with structured output.
     - Semantic errors (ValidationError): 1 retry with feedback message.
     - Network errors: Up to 3 retries with exponential backoff.
+    Raises RateLimitError if it's a rate limit error.
     Raises AgentOutputError if all retries are exhausted.
     """
 
@@ -46,9 +74,12 @@ async def invoke_with_retry(
         wait=wait_exponential(multiplier=RETRY_WAIT_SECONDS, min=1, max=10),
         reraise=True,
     )
-    async def _invoke_network() -> BaseModel:
+    async def _invoke_network() -> dict | BaseModel:
         try:
-            return await chain.ainvoke(messages)
+            res = await chain.ainvoke(messages)
+            if isinstance(res, dict) and res.get("parsing_error") is not None:
+                raise res["parsing_error"]
+            return res
         except Exception as e:
             if not _is_semantic_error(e):
                 logger.warning(f"Network error in agent {agent_id} phase {phase}: {e}")
@@ -76,7 +107,14 @@ async def invoke_with_retry(
             else:
                 # Network error that exhausted tenacity retries
                 logger.error(f"Agent {agent_id} failed network call: {e}")
+                if _is_rate_limit_error(e):
+                    from src.engine.exceptions import RateLimitError
+                    raise RateLimitError(
+                        message=f"Rate limit hit for provider {provider}: {e}",
+                        provider=provider,
+                    )
                 raise AgentOutputError(agent_id, phase, e)
 
     # Should not reach here
     raise AgentOutputError(agent_id, phase, Exception("Unknown error in retry loop"))
+
