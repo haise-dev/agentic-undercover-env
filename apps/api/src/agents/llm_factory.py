@@ -8,7 +8,10 @@ from src.models import AgentLLMConfig, LLMProvider
 
 
 def get_llm_client(
-    config: AgentLLMConfig, settings: Settings, model_name: str | None = None, api_key_index: int = 1
+    config: AgentLLMConfig,
+    settings: Settings,
+    model_name: str | None = None,
+    api_key_index: int = 1,
 ) -> BaseChatModel:
     """
     Factory function to instantiate the correct LangChain ChatModel based on provider.

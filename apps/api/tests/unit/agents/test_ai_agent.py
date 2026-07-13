@@ -7,6 +7,7 @@ from src.agents.ai_agent import AIAgent
 from src.models import (
     AgentType,
     DeliberationOutput,
+    DeliberationIntent,
     Phase,
     PollingOutput,
     ReactionOutput,
@@ -85,7 +86,11 @@ async def test_ai_agent_speak(mock_invoke, ai_agent, mock_llm_client, round_cont
 @pytest.mark.asyncio
 @patch("src.agents.ai_agent.invoke_with_retry")
 async def test_ai_agent_deliberate(mock_invoke, ai_agent, mock_llm_client, round_context):
-    expected_output = DeliberationOutput(inner_thought="Thinking...", public_statement="I agree.")
+    expected_output = DeliberationOutput(
+        inner_thought="Thinking...",
+        public_statement="I agree.",
+        intent=DeliberationIntent.GENERAL_OPINION,
+    )
     mock_invoke.return_value = expected_output
 
     with patch("src.core.quota.QuotaManager.add_usage") as mock_add_usage:

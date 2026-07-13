@@ -33,24 +33,22 @@ def _is_network_error(e: BaseException) -> bool:
 def _is_rate_limit_error(e: BaseException) -> bool:
     err_type = type(e).__name__
     err_module = type(e).__module__
-    
+
     if err_type in ("RateLimitError", "ResourceExhausted"):
         return True
-        
+
     if "google.api_core.exceptions" in err_module and err_type == "ResourceExhausted":
         return True
     if "openai" in err_module and err_type == "RateLimitError":
         return True
     if "groq" in err_module and err_type == "RateLimitError":
         return True
-        
+
     err_str = str(e).lower()
     if "rate limit" in err_str or "resourceexhausted" in err_str or "429" in err_str:
         return True
-        
+
     return False
-
-
 
 
 async def invoke_with_retry(
@@ -109,6 +107,7 @@ async def invoke_with_retry(
                 logger.error(f"Agent {agent_id} failed network call: {e}")
                 if _is_rate_limit_error(e):
                     from src.engine.exceptions import RateLimitError
+
                     raise RateLimitError(
                         message=f"Rate limit hit for provider {provider}: {e}",
                         provider=provider,
@@ -117,4 +116,3 @@ async def invoke_with_retry(
 
     # Should not reach here
     raise AgentOutputError(agent_id, phase, Exception("Unknown error in retry loop"))
-

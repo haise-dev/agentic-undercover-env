@@ -36,10 +36,16 @@ class AIAgent(BaseAgent):
         if not config.llm_config:
             raise ValueError("AIAgent requires an AgentLLMConfig")
         self._smart_llm = get_llm_client(
-            config.llm_config, settings, model_name=config.llm_config.smart_model_name, api_key_index=config.api_key_index
+            config.llm_config,
+            settings,
+            model_name=config.llm_config.smart_model_name,
+            api_key_index=config.api_key_index,
         )
         self._fast_llm = get_llm_client(
-            config.llm_config, settings, model_name=config.llm_config.fast_model_name, api_key_index=config.api_key_index
+            config.llm_config,
+            settings,
+            model_name=config.llm_config.fast_model_name,
+            api_key_index=config.api_key_index,
         )
 
     def _create_action_log(
@@ -107,7 +113,11 @@ class AIAgent(BaseAgent):
         start_time = time.perf_counter()
 
         # 4. Invoke with retry (with fallback from llama-4-scout to llama-3.3-70b for Groq)
-        provider_str = self.config.llm_config.provider.value if self.config.llm_config else "unknown"
+        provider_str = (
+            self.config.llm_config.provider.value
+            if self.config.llm_config
+            else "unknown"
+        )
         try:
             result = await invoke_with_retry(
                 chain=chain,
@@ -120,14 +130,22 @@ class AIAgent(BaseAgent):
             # Check if this is a semantic validation error (we don't want to fallback on semantic errors)
             from src.agents.exceptions import AgentOutputError as AgentOutputErrorLocal
             from src.agents.retry import _is_semantic_error
+
             inner_exc = e.original_error if isinstance(e, AgentOutputErrorLocal) else e
             if _is_semantic_error(inner_exc):
                 raise e
 
-            is_groq = self.config.llm_config and self.config.llm_config.provider == LLMProvider.GROQ
-            is_scout = self.config.llm_config and active_model_name == "meta-llama/llama-4-scout-17b-16e-instruct"
+            is_groq = (
+                self.config.llm_config
+                and self.config.llm_config.provider == LLMProvider.GROQ
+            )
+            is_scout = (
+                self.config.llm_config
+                and active_model_name == "meta-llama/llama-4-scout-17b-16e-instruct"
+            )
             if is_groq and is_scout:
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.warning(
                     f"Groq API call for {active_model_name} failed: {e}. "
@@ -135,6 +153,7 @@ class AIAgent(BaseAgent):
                 )
                 try:
                     from copy import deepcopy
+
                     fallback_config = deepcopy(self.config.llm_config)
                     fallback_llm = get_llm_client(
                         fallback_config,
@@ -142,8 +161,10 @@ class AIAgent(BaseAgent):
                         model_name="llama-3.3-70b-versatile",
                         api_key_index=self.config.api_key_index,
                     )
-                    fallback_chain = fallback_llm.with_structured_output(output_schema, include_raw=True)
-                    
+                    fallback_chain = fallback_llm.with_structured_output(
+                        output_schema, include_raw=True
+                    )
+
                     result = await invoke_with_retry(
                         chain=fallback_chain,
                         messages=messages,
@@ -152,7 +173,9 @@ class AIAgent(BaseAgent):
                         provider=provider_str,
                     )
                 except Exception as fallback_exc:
-                    logger.error(f"Fallback to llama-3.3-70b-versatile failed: {fallback_exc}")
+                    logger.error(
+                        f"Fallback to llama-3.3-70b-versatile failed: {fallback_exc}"
+                    )
                     raise e
             else:
                 raise e
@@ -169,7 +192,11 @@ class AIAgent(BaseAgent):
         fallback_total_tokens = fallback_prompt_tokens + fallback_completion_tokens
 
         # Check for usage_metadata from LLM provider
-        if raw_message and hasattr(raw_message, "usage_metadata") and raw_message.usage_metadata:
+        if (
+            raw_message
+            and hasattr(raw_message, "usage_metadata")
+            and raw_message.usage_metadata
+        ):
             usage = raw_message.usage_metadata
             prompt_tokens = usage.get("input_tokens", fallback_prompt_tokens)
             completion_tokens = usage.get("output_tokens", fallback_completion_tokens)
@@ -181,11 +208,13 @@ class AIAgent(BaseAgent):
 
         # Record quota usage
         from src.core.quota import QuotaManager
+
         try:
             await QuotaManager.add_usage(self.config.api_key_index, total_tokens)
         except Exception as q_exc:
             # We don't want quota tracing errors to fail the whole agent run
             import logging
+
             logging.getLogger(__name__).warning(f"Failed to log quota usage: {q_exc}")
 
         # 5. Log action

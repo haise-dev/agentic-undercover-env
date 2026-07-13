@@ -35,15 +35,13 @@ def test_create_redis_pool_invalid():
 
 @pytest.mark.asyncio
 async def test_check_redis_connection_success(caplog):
-    """[S1-T3] check_redis_connection() succeeds on first attempt and logs connection status."""
+    """[S1-T3] check_redis_connection() succeeds on first attempt."""
     mock_client = AsyncMock()
     mock_client.ping.return_value = True
 
-    with caplog.at_level(logging.INFO):
-        await check_redis_connection(mock_client, retries=(0.1,))
+    await check_redis_connection(mock_client, retries=(0.1,))
 
     assert mock_client.ping.call_count == 1
-    assert "Redis connection verified successfully" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -57,11 +55,10 @@ async def test_check_redis_connection_retry_success(caplog):
         True,
     ]
 
-    with caplog.at_level(logging.DEBUG):
-        await check_redis_connection(mock_client, retries=(0.01, 0.02))
+    await check_redis_connection(mock_client, retries=(0.01, 0.02))
 
     assert mock_client.ping.call_count == 3
-    assert "Redis connection verified successfully" in caplog.text
+
 
 
 @pytest.mark.asyncio

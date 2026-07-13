@@ -1,6 +1,14 @@
 from src.models.assignment import AgentRoleAssignment
 from src.models.config import AgentConfig, AgentLLMConfig, EpisodeConfig
-from src.models.enums import AgentType, GameResult, LLMProvider, Phase, PollVote, Role
+from src.models.enums import (
+    AgentType,
+    DeliberationIntent,
+    GameResult,
+    LLMProvider,
+    Phase,
+    PollVote,
+    Role,
+)
 from src.models.export import ActionLog, EpisodeExport
 from src.models.messages import PublicMessage, RoundContext, SystemAnnouncement
 from src.models.outputs import (
@@ -21,6 +29,7 @@ __all__ = [
     "PollVote",
     "GameResult",
     "LLMProvider",
+    "DeliberationIntent",
     "AgentLLMConfig",
     "AgentConfig",
     "EpisodeConfig",

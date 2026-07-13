@@ -11,7 +11,7 @@ from src.engine.nodes.deliberation_node import (
     deliberation_node,
 )
 from src.engine.graph.state import to_graph_state, to_game_state
-from src.models import Phase, DeliberationOutput
+from src.models import Phase, DeliberationOutput, DeliberationIntent
 from tests.unit.engine.conftest import MockAgent
 
 
@@ -23,7 +23,11 @@ def mock_emitter():
 
 
 def ok_out(thought: str, statement: str) -> DeliberationOutput:
-    return DeliberationOutput(inner_thought=thought, public_statement=statement)
+    return DeliberationOutput(
+        inner_thought=thought,
+        public_statement=statement,
+        intent=DeliberationIntent.GENERAL_OPINION,
+    )
 
 
 @pytest.mark.asyncio

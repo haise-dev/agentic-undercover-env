@@ -17,7 +17,11 @@ class ProviderModelInfo(BaseModel):
 AVAILABLE_PROVIDERS = {
     LLMProvider.OPENAI.value: ["gpt-4o", "gpt-4o-mini"],
     LLMProvider.GEMINI.value: ["gemini-3.5-flash", "gemini-2.0-flash"],
-    LLMProvider.GROQ.value: ["meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+    LLMProvider.GROQ.value: [
+        "meta-llama/llama-4-scout-17b-16e-instruct",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+    ],
     LLMProvider.DEEPSEEK.value: ["deepseek-chat", "deepseek-coder"],
 }
 

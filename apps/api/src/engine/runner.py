@@ -73,6 +73,7 @@ class EpisodeRunner:
             state = final_graph_state["game_state"]
         except RateLimitError as exc:
             from src.core.quota import QuotaTracker
+
             await QuotaTracker.mark_exhausted(exc.provider)
             await self._emitter.emit(
                 EVT_GAME_ERROR,

@@ -139,16 +139,21 @@ async def reaction_node(
     # Gather survivor reactions concurrently
     async def get_survivor_reaction(aid):
         vote = next((vr for vr in state.vote_records if vr.voter_agent_id == aid), None)
-        vote_target_name = agent_names.get(vote.target_agent_id, "unknown") if vote else "unknown"
+        vote_target_name = (
+            agent_names.get(vote.target_agent_id, "unknown") if vote else "unknown"
+        )
 
         voted_correctly = vote is not None and vote.target_agent_id == eliminated_id
-        vote_correct_status = "YES — you voted for the right person." if voted_correctly else "NO — you voted for the wrong person."
+        vote_correct_status = (
+            "YES — you voted for the right person."
+            if voted_correctly
+            else "NO — you voted for the wrong person."
+        )
 
         agent_role = state.role_assignments[aid].role
         is_imposter = agent_role == Role.IMPOSTER
-        won_game = (
-            (game_outcome == "villagers_win" and not is_imposter)
-            or (game_outcome == "imposter_wins" and is_imposter)
+        won_game = (game_outcome == "villagers_win" and not is_imposter) or (
+            game_outcome == "imposter_wins" and is_imposter
         )
         you_won_status = "YOU WON this game." if won_game else "YOU LOST this game."
 
@@ -211,11 +216,14 @@ async def _react_with_fallback(
     On 2nd invalid: uses fallback_text.
     """
     import inspect
+
     context = ContextBuilder.build(state, agent_id)
 
     # Inspect the signature of agent.react to avoid TypeError on mock agents in tests
     sig = inspect.signature(agent.react)
-    has_var_keyword = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+    has_var_keyword = any(
+        p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+    )
 
     passed_kwargs = {}
     if has_var_keyword:

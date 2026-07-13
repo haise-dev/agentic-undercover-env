@@ -30,6 +30,7 @@ from src.models import (
     ActionLog,
     SpeakingOutput,
     DeliberationOutput,
+    DeliberationIntent,
     PollingOutput,
     PollVote,
     VotingOutput,
@@ -69,7 +70,11 @@ async def test_runner_full_linear_pipeline(
         return SpeakingOutput(inner_thought="think", public_statement=msg)
 
     def ok_deliberate(msg):
-        return DeliberationOutput(inner_thought="think", public_statement=msg)
+        return DeliberationOutput(
+            inner_thought="think",
+            public_statement=msg,
+            intent=DeliberationIntent.GENERAL_OPINION,
+        )
 
     def ok_poll(vote):
         return PollingOutput(inner_thought="think", poll_vote=vote)

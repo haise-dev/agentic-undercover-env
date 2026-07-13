@@ -36,3 +36,13 @@ class LLMProvider(StrEnum):
     GEMINI = "gemini"
     GROQ = "groq"
     DEEPSEEK = "deepseek"
+
+
+class DeliberationIntent(StrEnum):
+    GENERAL_OPINION = "general_opinion"
+    ACCUSE = "accuse"
+    QUESTION = "question"
+    DEFEND = "defend"
+    AGREE_WITH = "agree_with"
+    SUGGEST_VOTE = "suggest_vote"
+    SUGGEST_SKIP = "suggest_skip"

@@ -100,14 +100,16 @@ class ContextBuilder:
             return [
                 m
                 for m in state.all_messages
-                if m.round_number < current_round or (m.round_number == current_round and m.phase == Phase.SPEAKING)
+                if m.round_number < current_round
+                or (m.round_number == current_round and m.phase == Phase.SPEAKING)
             ]
         elif phase in (Phase.DELIBERATION, Phase.POLLING, Phase.VOTING):
             # All past messages + current round Speaking and Deliberation messages so far
             return [
                 m
                 for m in state.all_messages
-                if m.round_number < current_round or (
+                if m.round_number < current_round
+                or (
                     m.round_number == current_round
                     and m.phase in (Phase.SPEAKING, Phase.DELIBERATION)
                 )

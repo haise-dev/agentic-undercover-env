@@ -7,6 +7,7 @@ from src.models import (
     Phase,
     SpeakingOutput,
     DeliberationOutput,
+    DeliberationIntent,
     PollingOutput,
     PollVote,
     VotingOutput,
@@ -43,8 +44,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
         "agent_0": MockAgent(
             speak_outputs=[SpeakingOutput(inner_thought="t0", public_statement="s0")],
             deliberate_outputs=[
-                DeliberationOutput(inner_thought="d0_1", public_statement="ds0_1"),
-                DeliberationOutput(inner_thought="d0_2", public_statement="ds0_2"),
+                DeliberationOutput(
+                    inner_thought="d0_1",
+                    public_statement="ds0_1",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
+                DeliberationOutput(
+                    inner_thought="d0_2",
+                    public_statement="ds0_2",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
             ],
             poll_outputs=[PollingOutput(inner_thought="p0", poll_vote=PollVote.VOTE_NOW)],
             vote_outputs=[VotingOutput(inner_thought="v0", vote_target="agent_1")],
@@ -53,8 +62,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
         "agent_1": MockAgent(
             speak_outputs=[SpeakingOutput(inner_thought="t1", public_statement="s1")],
             deliberate_outputs=[
-                DeliberationOutput(inner_thought="d1_1", public_statement="ds1_1"),
-                DeliberationOutput(inner_thought="d1_2", public_statement="ds1_2"),
+                DeliberationOutput(
+                    inner_thought="d1_1",
+                    public_statement="ds1_1",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
+                DeliberationOutput(
+                    inner_thought="d1_2",
+                    public_statement="ds1_2",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
             ],
             poll_outputs=[PollingOutput(inner_thought="p1", poll_vote=PollVote.VOTE_NOW)],
             vote_outputs=[VotingOutput(inner_thought="v1", vote_target="agent_0")],
@@ -63,8 +80,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
         "agent_2": MockAgent(
             speak_outputs=[SpeakingOutput(inner_thought="t2", public_statement="s2")],
             deliberate_outputs=[
-                DeliberationOutput(inner_thought="d2_1", public_statement="ds2_1"),
-                DeliberationOutput(inner_thought="d2_2", public_statement="ds2_2"),
+                DeliberationOutput(
+                    inner_thought="d2_1",
+                    public_statement="ds2_1",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
+                DeliberationOutput(
+                    inner_thought="d2_2",
+                    public_statement="ds2_2",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
             ],
             poll_outputs=[PollingOutput(inner_thought="p2", poll_vote=PollVote.SKIP)],
             vote_outputs=[VotingOutput(inner_thought="v2", vote_target="agent_0")],
@@ -73,8 +98,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
         "agent_3": MockAgent(
             speak_outputs=[SpeakingOutput(inner_thought="t3", public_statement="s3")],
             deliberate_outputs=[
-                DeliberationOutput(inner_thought="d3_1", public_statement="ds3_1"),
-                DeliberationOutput(inner_thought="d3_2", public_statement="ds3_2"),
+                DeliberationOutput(
+                    inner_thought="d3_1",
+                    public_statement="ds3_1",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
+                DeliberationOutput(
+                    inner_thought="d3_2",
+                    public_statement="ds3_2",
+                    intent=DeliberationIntent.GENERAL_OPINION,
+                ),
             ],
             poll_outputs=[PollingOutput(inner_thought="p3", poll_vote=PollVote.SKIP)],
             vote_outputs=[VotingOutput(inner_thought="v3", vote_target="agent_0")],

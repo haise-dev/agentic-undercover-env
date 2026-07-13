@@ -207,4 +207,5 @@ def test_flat_import_all_outputs():
 def test_all_exports_listed():
     import src.models
 
-    assert len(src.models.__all__) == 25
+    assert len(src.models.__all__) == 26
+

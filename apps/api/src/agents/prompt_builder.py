@@ -25,7 +25,9 @@ def format_chat_history(messages: list[PublicMessage]) -> str:
     formatted = []
     for msg in messages:
         phase_str = "Guess" if msg.phase == Phase.SPEAKING else "Discuss"
-        formatted.append(f"[Round {msg.round_number} - {phase_str}] [{msg.display_name}]: {msg.content}")
+        formatted.append(
+            f"[Round {msg.round_number} - {phase_str}] [{msg.display_name}]: {msg.content}"
+        )
     return "\n".join(formatted)
 
 
@@ -67,13 +69,17 @@ def build_user_prompt(
     alive_agents_list = format_alive_agents(context.alive_agents)
 
     # Separate history into past rounds and current round events
-    past_history_msgs = [m for m in context.public_history if m.round_number < context.current_round]
+    past_history_msgs = [
+        m for m in context.public_history if m.round_number < context.current_round
+    ]
     current_chat_msgs = [
-        m for m in context.public_history
+        m
+        for m in context.public_history
         if m.round_number == context.current_round and m.phase == Phase.SPEAKING
     ]
     current_delib_msgs = [
-        m for m in context.public_history
+        m
+        for m in context.public_history
         if m.round_number == context.current_round and m.phase == Phase.DELIBERATION
     ]
 
@@ -119,8 +125,7 @@ def build_user_prompt(
 
         if is_eliminated_agent:
             return REACTION_ELIMINATED_PROMPT.format(
-                agent_name=current_agent_name,
-                game_language=context.game_language
+                agent_name=current_agent_name, game_language=context.game_language
             )
         else:
             eliminated_role = kwargs.get("eliminated_role", "unknown")

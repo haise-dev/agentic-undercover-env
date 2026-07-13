@@ -25,7 +25,9 @@ class QuotaTracker:
         try:
             async with get_redis_client() as redis:
                 await redis.set(redis_key, "1", ex=ttl_seconds)
-                logger.info(f"Marked provider '{provider}' as exhausted in Redis for {ttl_seconds}s")
+                logger.info(
+                    f"Marked provider '{provider}' as exhausted in Redis for {ttl_seconds}s"
+                )
                 return
         except Exception as exc:
             logger.warning(
@@ -35,7 +37,9 @@ class QuotaTracker:
         # Fallback to local memory
         expiry = time.time() + ttl_seconds
         cls._memory_cache[provider] = expiry
-        logger.info(f"Marked provider '{provider}' as exhausted in-memory for {ttl_seconds}s")
+        logger.info(
+            f"Marked provider '{provider}' as exhausted in-memory for {ttl_seconds}s"
+        )
 
     @classmethod
     async def is_exhausted(cls, provider: str) -> bool:
@@ -91,7 +95,9 @@ class QuotaManager:
             )
 
         # Fallback to local memory
-        cls._memory_usage[api_key_index] = cls._memory_usage.get(api_key_index, 0) + total_tokens
+        cls._memory_usage[api_key_index] = (
+            cls._memory_usage.get(api_key_index, 0) + total_tokens
+        )
 
     @classmethod
     async def get_usage(cls) -> dict[int, int]:
