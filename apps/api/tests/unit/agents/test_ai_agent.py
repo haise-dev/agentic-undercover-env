@@ -87,7 +87,9 @@ async def test_ai_agent_speak(mock_invoke, ai_agent, mock_llm_client, round_cont
 @patch("src.agents.ai_agent.invoke_with_retry")
 async def test_ai_agent_deliberate(mock_invoke, ai_agent, mock_llm_client, round_context):
     expected_output = DeliberationOutput(
-        inner_thought="Thinking...",
+        step_1_audit="thought",
+        step_2_anti_repetition="thought",
+        step_3_intent_and_target="thought",
         public_statement="I agree.",
         intent=DeliberationIntent.GENERAL_OPINION,
     )

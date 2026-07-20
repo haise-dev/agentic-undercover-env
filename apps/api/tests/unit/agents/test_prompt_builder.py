@@ -205,8 +205,8 @@ def test_build_user_prompt_speaking_imposter_uses_imposter_template(round_contex
 def test_build_user_prompt_deliberation_villager_uses_villager_template(round_context):
     object.__setattr__(round_context, "deliberation_round", 1)
     prompt = build_user_prompt(Phase.DELIBERATION, round_context, "Bob")
-    # Villager deliberation prompt must contain Clue Audit instructions and reference the secret word
-    assert "CLUE AUDIT" in prompt
+    # Villager deliberation prompt must contain step_1_audit instructions and reference the secret word
+    assert "step_1_audit:" in prompt
     assert "Cat" in prompt
 
 
@@ -335,5 +335,27 @@ def test_cr5_t2_prompt_builder_passes_reaction_context(round_context):
     assert "Overall outcome: villagers_win" in prompt
     assert "Did you vote correctly? YES — you voted for the right person." in prompt
     assert "Did you win? YOU WON this game." in prompt
+
+
+def test_e10_t1_deliberation_quote_and_explain():
+    from src.agents.prompt_templates import VILLAGER_DELIBERATION_PROMPT, IMPOSTER_DELIBERATION_PROMPT
+    
+    # Assert quote and explain rules are in both templates
+    assert "MANDATORY REASONING" in VILLAGER_DELIBERATION_PROMPT
+    assert "MANDATORY REASONING" in IMPOSTER_DELIBERATION_PROMPT
+    assert "never make a groundless accusation" in VILLAGER_DELIBERATION_PROMPT.lower()
+    assert "never make a groundless accusation" in IMPOSTER_DELIBERATION_PROMPT.lower()
+
+
+def test_e10_t2_self_reflection_rules():
+    from src.agents.prompt_templates import VILLAGER_DELIBERATION_PROMPT, IMPOSTER_DELIBERATION_PROMPT
+    
+    # Assert anti-repetition rules are in both templates
+    assert "ANTI-REPETITION" in VILLAGER_DELIBERATION_PROMPT
+    assert "ANTI-REPETITION" in IMPOSTER_DELIBERATION_PROMPT
+    assert "quote your exact last public_statement" in VILLAGER_DELIBERATION_PROMPT.lower()
+    assert "quote your exact last public_statement" in IMPOSTER_DELIBERATION_PROMPT.lower()
+
+
 
 

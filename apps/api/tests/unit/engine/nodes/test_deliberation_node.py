@@ -24,7 +24,9 @@ def mock_emitter():
 
 def ok_out(thought: str, statement: str) -> DeliberationOutput:
     return DeliberationOutput(
-        inner_thought=thought,
+        step_1_audit=thought,
+        step_2_anti_repetition=thought,
+        step_3_intent_and_target=thought,
         public_statement=statement,
         intent=DeliberationIntent.GENERAL_OPINION,
     )
@@ -37,7 +39,9 @@ def ok_out_intent(
     target_name: str | None = None,
 ) -> DeliberationOutput:
     return DeliberationOutput(
-        inner_thought=thought,
+        step_1_audit=thought,
+        step_2_anti_repetition=thought,
+        step_3_intent_and_target=thought,
         public_statement=statement,
         intent=intent,
         target_name=target_name,

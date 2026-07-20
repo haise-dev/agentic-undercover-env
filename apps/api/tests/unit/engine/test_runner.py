@@ -71,7 +71,9 @@ async def test_runner_full_linear_pipeline(
 
     def ok_deliberate(msg):
         return DeliberationOutput(
-            inner_thought="think",
+            step_1_audit="thought",
+            step_2_anti_repetition="thought",
+            step_3_intent_and_target="thought",
             public_statement=msg,
             intent=DeliberationIntent.GENERAL_OPINION,
         )

@@ -125,3 +125,56 @@ def test_route_dynamic_deliberation_priority_4_free_for_all(game_state):
     # next speaker can be any alive agent
     assert game_state.next_speaker_id in ("agent_0", "agent_1", "agent_2", "agent_3")
 
+
+def test_route_dynamic_deliberation_ping_pong_cooldown(game_state):
+    game_state.deliberation_message_count = 3
+    game_state.turns_count = {
+        "agent_0": 1,
+        "agent_1": 2,
+        "agent_2": 0,
+        "agent_3": 0,
+    }
+    # Create the ping-pong sequence:
+    # 1. Bob (agent_1) accuses Alice (agent_0)
+    m1 = PublicMessage(
+        agent_id="agent_1",
+        display_name="Bob",
+        phase=Phase.DELIBERATION,
+        round_number=1,
+        content="I accuse Alice",
+        timestamp="2026-07-02T10:00:00Z",
+        intent=DeliberationIntent.ACCUSE,
+        target_name="Alice",
+    )
+    # 2. Alice (agent_0) accuses Bob (agent_1)
+    m2 = PublicMessage(
+        agent_id="agent_0",
+        display_name="Alice",
+        phase=Phase.DELIBERATION,
+        round_number=1,
+        content="I accuse Bob",
+        timestamp="2026-07-02T10:00:01Z",
+        intent=DeliberationIntent.ACCUSE,
+        target_name="Bob",
+    )
+    # 3. Bob (agent_1) accuses Alice (agent_0) again
+    m3 = PublicMessage(
+        agent_id="agent_1",
+        display_name="Bob",
+        phase=Phase.DELIBERATION,
+        round_number=1,
+        content="Alice is still sus",
+        timestamp="2026-07-02T10:00:02Z",
+        intent=DeliberationIntent.ACCUSE,
+        target_name="Alice",
+    )
+    game_state.all_messages.extend([m1, m2, m3])
+    state = to_graph_state(game_state)
+    
+    assert route_dynamic_deliberation(state) == "deliberation"
+    # Because of ping-pong, agent_0 (Alice) must NOT be selected despite being the target of m3
+    assert game_state.next_speaker_id != "agent_0"
+    # Instead, it falls through. Since agent_2 and agent_3 have 0 turns (Priority 2), it should select one of them.
+    assert game_state.next_speaker_id in ("agent_2", "agent_3")
+
+

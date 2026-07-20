@@ -11,10 +11,16 @@ class SpeakingOutput(BaseModel):
 
 class DeliberationOutput(BaseModel):
     model_config = ConfigDict(frozen=True)
-    inner_thought: str
+    step_1_audit: str
+    step_2_anti_repetition: str
+    step_3_intent_and_target: str
     public_statement: str
     intent: DeliberationIntent
     target_name: str | None = None
+
+    @property
+    def inner_thought(self) -> str:
+        return f"Audit: {self.step_1_audit}\nAnti-Repetition: {self.step_2_anti_repetition}\nIntent: {self.step_3_intent_and_target}"
 
     @model_validator(mode="after")
     def _target_required_for_directional_intents(self) -> "DeliberationOutput":

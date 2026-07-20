@@ -45,12 +45,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
             speak_outputs=[SpeakingOutput(inner_thought="t0", public_statement="s0")],
             deliberate_outputs=[
                 DeliberationOutput(
-                    inner_thought="d0_1",
+                    step_1_audit="d0_1",
+                    step_2_anti_repetition="d0_1",
+                    step_3_intent_and_target="d0_1",
                     public_statement="ds0_1",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
                 DeliberationOutput(
-                    inner_thought="d0_2",
+                    step_1_audit="d0_2",
+                    step_2_anti_repetition="d0_2",
+                    step_3_intent_and_target="d0_2",
                     public_statement="ds0_2",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
@@ -63,12 +67,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
             speak_outputs=[SpeakingOutput(inner_thought="t1", public_statement="s1")],
             deliberate_outputs=[
                 DeliberationOutput(
-                    inner_thought="d1_1",
+                    step_1_audit="d1_1",
+                    step_2_anti_repetition="d1_1",
+                    step_3_intent_and_target="d1_1",
                     public_statement="ds1_1",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
                 DeliberationOutput(
-                    inner_thought="d1_2",
+                    step_1_audit="d1_2",
+                    step_2_anti_repetition="d1_2",
+                    step_3_intent_and_target="d1_2",
                     public_statement="ds1_2",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
@@ -81,12 +89,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
             speak_outputs=[SpeakingOutput(inner_thought="t2", public_statement="s2")],
             deliberate_outputs=[
                 DeliberationOutput(
-                    inner_thought="d2_1",
+                    step_1_audit="d2_1",
+                    step_2_anti_repetition="d2_1",
+                    step_3_intent_and_target="d2_1",
                     public_statement="ds2_1",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
                 DeliberationOutput(
-                    inner_thought="d2_2",
+                    step_1_audit="d2_2",
+                    step_2_anti_repetition="d2_2",
+                    step_3_intent_and_target="d2_2",
                     public_statement="ds2_2",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
@@ -99,12 +111,16 @@ async def test_compiled_graph_execution_path_to_voting(game_state, mock_emitter)
             speak_outputs=[SpeakingOutput(inner_thought="t3", public_statement="s3")],
             deliberate_outputs=[
                 DeliberationOutput(
-                    inner_thought="d3_1",
+                    step_1_audit="d3_1",
+                    step_2_anti_repetition="d3_1",
+                    step_3_intent_and_target="d3_1",
                     public_statement="ds3_1",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),
                 DeliberationOutput(
-                    inner_thought="d3_2",
+                    step_1_audit="d3_2",
+                    step_2_anti_repetition="d3_2",
+                    step_3_intent_and_target="d3_2",
                     public_statement="ds3_2",
                     intent=DeliberationIntent.GENERAL_OPINION,
                 ),

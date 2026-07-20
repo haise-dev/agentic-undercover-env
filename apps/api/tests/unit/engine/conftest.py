@@ -60,7 +60,9 @@ class MockAgent:
         except StopIteration:
             from src.models import DeliberationOutput, DeliberationIntent
             result = DeliberationOutput(
-                inner_thought="Default deliberate thought",
+                step_1_audit="Default deliberate thought",
+                step_2_anti_repetition="Default deliberate thought",
+                step_3_intent_and_target="Default deliberate thought",
                 public_statement="Default deliberate statement",
                 intent=DeliberationIntent.GENERAL_OPINION,
             )

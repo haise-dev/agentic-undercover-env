@@ -51,7 +51,42 @@ def route_dynamic_deliberation(state: GraphState) -> str:
                 if agent.display_name.lower() == last_msg.target_name.lower():
                     target_id = agent.agent_id
                     break
-            if target_id and target_id in alive_agents:
+
+            # Check for ping-pong loop (A -> B, B -> A, A -> B) to prevent 1v1 deadlocks
+            delib_msgs = [
+                m for m in game_state.all_messages if m.phase == Phase.DELIBERATION
+            ]
+            is_ping_pong = False
+            if len(delib_msgs) >= 3:
+                m1 = delib_msgs[-1]
+                m2 = delib_msgs[-2]
+                m3 = delib_msgs[-3]
+
+                if (
+                    m1.intent
+                    in (DeliberationIntent.ACCUSE, DeliberationIntent.QUESTION)
+                    and m2.intent
+                    in (DeliberationIntent.ACCUSE, DeliberationIntent.QUESTION)
+                    and m3.intent
+                    in (DeliberationIntent.ACCUSE, DeliberationIntent.QUESTION)
+                ):
+
+                    def get_target_id(msg):
+                        if not msg.target_name:
+                            return None
+                        for a in game_state.config.agents:
+                            if a.display_name.lower() == msg.target_name.lower():
+                                return a.agent_id
+                        return None
+
+                    id1, t1 = m1.agent_id, get_target_id(m1)
+                    id2, t2 = m2.agent_id, get_target_id(m2)
+                    id3, t3 = m3.agent_id, get_target_id(m3)
+
+                    if id1 == t2 and t1 == id2 and id2 == t3 and t2 == id3:
+                        is_ping_pong = True
+
+            if target_id and target_id in alive_agents and target_id != last_msg.agent_id and not is_ping_pong:
                 game_state.next_speaker_id = target_id
                 return "deliberation"
 

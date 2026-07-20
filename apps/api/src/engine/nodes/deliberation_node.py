@@ -141,6 +141,8 @@ def _is_valid_deliberation_output(output: object) -> bool:
     """Checks if the output matches the required DeliberationOutput format."""
     return (
         isinstance(output, DeliberationOutput)
-        and bool(output.inner_thought.strip())
+        and bool(output.step_1_audit.strip())
+        and bool(output.step_2_anti_repetition.strip())
+        and bool(output.step_3_intent_and_target.strip())
         and bool(output.public_statement.strip())
     )

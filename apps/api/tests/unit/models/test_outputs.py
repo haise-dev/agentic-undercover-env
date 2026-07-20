@@ -30,11 +30,14 @@ def test_speaking_output_frozen():
 
 def test_deliberation_output_valid():
     out = DeliberationOutput(
-        inner_thought="thought",
+        step_1_audit="thought",
+        step_2_anti_repetition="thought",
+        step_3_intent_and_target="thought",
+
         public_statement="statement",
         intent=DeliberationIntent.GENERAL_OPINION,
     )
-    assert out.inner_thought == "thought"
+    assert out.inner_thought == "Audit: thought\nAnti-Repetition: thought\nIntent: thought"
     assert out.public_statement == "statement"
     assert out.intent == DeliberationIntent.GENERAL_OPINION
     assert out.target_name is None
@@ -69,9 +72,7 @@ def test_reaction_output_valid():
 def test_all_outputs_serializable():
     s = SpeakingOutput(inner_thought="thought", public_statement="statement")
     d = DeliberationOutput(
-        inner_thought="thought",
-        public_statement="statement",
-        intent=DeliberationIntent.GENERAL_OPINION,
+        step_1_audit="t", step_2_anti_repetition="t", step_3_intent_and_target="t", public_statement="s", intent=DeliberationIntent.GENERAL_OPINION
     )
     p = PollingOutput(inner_thought="thought", poll_vote=PollVote.SKIP)
     v = VotingOutput(inner_thought="thought", vote_target="agent_1")
@@ -98,7 +99,10 @@ def test_inner_thought_required_on_all():
 
 def test_deliberation_output_valid_accuse_with_target():
     out = DeliberationOutput(
-        inner_thought="thought",
+        step_1_audit="thought",
+        step_2_anti_repetition="thought",
+        step_3_intent_and_target="thought",
+
         public_statement="statement",
         intent=DeliberationIntent.ACCUSE,
         target_name="Beta",
@@ -110,7 +114,10 @@ def test_deliberation_output_valid_accuse_with_target():
 def test_deliberation_output_accuse_missing_target():
     with pytest.raises(ValidationError) as exc_info:
         DeliberationOutput(
-            inner_thought="thought",
+            step_1_audit="thought",
+            step_2_anti_repetition="thought",
+            step_3_intent_and_target="thought",
+
             public_statement="statement",
             intent=DeliberationIntent.ACCUSE,
         )
@@ -120,7 +127,10 @@ def test_deliberation_output_accuse_missing_target():
 def test_deliberation_output_agree_with_missing_target():
     with pytest.raises(ValidationError) as exc_info:
         DeliberationOutput(
-            inner_thought="thought",
+            step_1_audit="thought",
+            step_2_anti_repetition="thought",
+            step_3_intent_and_target="thought",
+
             public_statement="statement",
             intent=DeliberationIntent.AGREE_WITH,
         )
@@ -130,7 +140,10 @@ def test_deliberation_output_agree_with_missing_target():
 def test_deliberation_output_invalid_intent():
     with pytest.raises(ValidationError):
         DeliberationOutput(
-            inner_thought="thought",
+            step_1_audit="thought",
+            step_2_anti_repetition="thought",
+            step_3_intent_and_target="thought",
+
             public_statement="statement",
             intent="invalid_intent",
         )

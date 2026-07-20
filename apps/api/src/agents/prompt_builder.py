@@ -95,6 +95,7 @@ def build_user_prompt(
         "chat_history": chat_history,
         "deliberation_history": deliberation_history,
         "game_language": context.game_language,
+        "agent_name": current_agent_name,
         "is_final_round_notice": "This is the FINAL ROUND. A vote will be forced after deliberation."
         if context.is_final_round
         else "",

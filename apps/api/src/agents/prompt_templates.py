@@ -181,14 +181,16 @@ CRITICAL RULES FOR REALISTIC DISCUSSION:
 - DYNAMICALLY RESPOND: Do not repeat the same point or echo other players' arguments. Listen to what players say in their defense or accusations and respond to them.
 - If someone defends themselves logically or raises a valid point (e.g., pointing out another suspect), evaluate and comment on that instead of blindly sticking to your initial target.
 - NO DOGPILING / PARROTING: If the player speaking immediately before you just accused someone, do NOT repeat their accusation or reasons. You MUST either provide completely NEW evidence, accuse a DIFFERENT player, or ask the accused a specific new question to push the game forward.
+- NO DOGPILING ON REASONS: If another player has already pointed out a specific flaw in someone's clue, you CANNOT use that exact same reason to accuse them again. You must find a NEW angle (e.g., their defensive behavior, a different flaw, or question someone else).
 - Keep your statement brief, conversational, and direct (max 1-2 short sentences). No polite AI padding or lecturing.
+- MANDATORY REASONING FOR ACCUSATIONS & QUESTIONS: If your intent is `accuse` or `question`, your public statement MUST contain two parts: 1) A direct reference to the target's specific clue or behavior, and 2) A brief reason why it is suspicious. Never make a groundless accusation like "I think X is the imposter" without citing their clue or behavior.
 
 == INTENT SYSTEM ==
 You must output an `intent` that summarizes the primary goal of your public statement. You must also output `target_name` if your intent targets a specific player.
 Valid intents:
 - "general_opinion": Sharing a generic observation without targeting anyone. (target_name MUST be null)
-- "accuse": Actively accusing someone of being the Imposter. (target_name MUST be the exact name of the accused player)
-- "question": Asking a specific player a direct question. (target_name MUST be the exact name of the player)
+- "accuse": Actively accusing someone of being the Imposter. (target_name MUST be the exact name of the accused player, CANNOT be {agent_name})
+- "question": Asking a specific player a direct question. (target_name MUST be the exact name of the player, CANNOT be {agent_name})
 - "defend": Defending yourself against an accusation. (target_name MUST be null)
 - "agree_with": Agreeing with another player's statement or deduction. (target_name MUST be the exact name of the player you are agreeing with). Consistency Rule: Do NOT agree with an accusation against someone you previously defended!
 - "suggest_vote": Proposing to the group that everyone should vote immediately in the upcoming polling phase. This is purely a social move to persuade others; it does NOT instantly trigger a vote. (target_name MUST be null)
@@ -196,8 +198,8 @@ Valid intents:
 
 CRITICAL: If you use "accuse" or "question", the system will immediately force the target to defend themselves. Use this strategically.
 
-Before writing, plan in your inner_thought:
-STEP 1 — CLUE AUDIT (run this BEFORE reading what others accused):
+Before writing, plan step by step in the corresponding fields:
+step_1_audit:
   You know the secret word is "{secret_word}". For each player's Speaking clue, ask:
   "Does this clue actually make sense for "{secret_word}" under the topic "{topic}"?"
   Rate each clue: CONSISTENT / SUSPICIOUS / VERY SUSPICIOUS.
@@ -205,9 +207,17 @@ STEP 1 — CLUE AUDIT (run this BEFORE reading what others accused):
   WARNING: Do not let anyone else's accusation override your own audit.
   If your audit says player X is most suspicious, target X — not who others point to.
 
-STEP 2 — DISCUSSION FLOW & ANTI-DOGPILE CHECK: How can I respond to the LATEST statements? If the previous speaker made an accusation, how can I add value instead of just agreeing or parroting them? Can I bring up someone else, or challenge their reasoning?
-STEP 3 — INTENT & TARGET: Which intent best fits my statement? Who is the exact target_name (if any)?
-STEP 4 — STATEMENT DRAFT: Formulate your short response in {game_language}.
+step_2_anti_repetition:
+  - Respond to the LATEST statements. If the previous speaker made an accusation, how can I add value?
+  - ANTI-REPETITION (CRITICAL): 
+    (1) Quote your EXACT last public_statement from the deliberation history. 
+    (2) Explain how your NEXT statement will be completely different in vocabulary and angle. If you repeat yourself or ask the same question again, you will be disqualified.
+
+step_3_intent_and_target:
+  Which intent best fits my statement? Who is the exact target_name (if any)?
+
+public_statement:
+  Formulate your short response in {game_language}.
 
 Now produce your JSON response."""
 
@@ -233,14 +243,16 @@ CRITICAL RULES FOR REALISTIC DISCUSSION:
 - DYNAMICALLY RESPOND: Do not repeat the same point or echo other players' arguments. Listen to what players say in their defense or accusations and respond to them.
 - If someone defends themselves logically or raises a valid point (e.g., pointing out another suspect), evaluate and comment on that instead of blindly sticking to your initial target.
 - NO DOGPILING / PARROTING: If the player speaking immediately before you just accused someone, do NOT repeat their accusation or reasons. You MUST either provide completely NEW evidence, accuse a DIFFERENT player, or ask the accused a specific new question to push the game forward.
+- NO DOGPILING ON REASONS: If another player has already pointed out a specific flaw in someone's clue, you CANNOT use that exact same reason to accuse them again. You must find a NEW angle (e.g., their defensive behavior, a different flaw, or question someone else).
 - Keep your statement brief, conversational, and direct (max 1-2 short sentences). No polite AI padding or lecturing.
+- MANDATORY REASONING FOR ACCUSATIONS & QUESTIONS: If your intent is `accuse` or `question`, your public statement MUST contain two parts: 1) A direct reference to the target's specific clue or behavior, and 2) A brief reason why it is suspicious. Never make a groundless accusation like "I think X is the imposter" without citing their clue or behavior.
 
 == INTENT SYSTEM ==
 You must output an `intent` that summarizes the primary goal of your public statement. You must also output `target_name` if your intent targets a specific player.
 Valid intents:
 - "general_opinion": Sharing a generic observation without targeting anyone. (target_name MUST be null)
-- "accuse": Actively accusing someone of being the Imposter. (target_name MUST be the exact name of the accused player)
-- "question": Asking a specific player a direct question. (target_name MUST be the exact name of the player)
+- "accuse": Actively accusing someone of being the Imposter. (target_name MUST be the exact name of the accused player, CANNOT be {agent_name})
+- "question": Asking a specific player a direct question. (target_name MUST be the exact name of the player, CANNOT be {agent_name})
 - "defend": Defending yourself against an accusation. (target_name MUST be null)
 - "agree_with": Agreeing with another player's statement or deduction. (target_name MUST be the exact name of the player you are agreeing with). Consistency Rule: Do NOT agree with an accusation against someone you previously defended!
 - "suggest_vote": Proposing to the group that everyone should vote immediately in the upcoming polling phase. This is purely a social move to persuade others; it does NOT instantly trigger a vote. (target_name MUST be null)
@@ -248,11 +260,21 @@ Valid intents:
 
 CRITICAL: If you use "accuse" or "question", the system will immediately force the target to defend themselves. Use this strategically.
 
-Before writing, plan in your inner_thought:
-STEP 1 — REVIEW & EVALUATE: Look at the speaking clues and the deliberation history. Who is suspected? What defenses or deflections have been made?
-STEP 2 — DISCUSSION FLOW & ANTI-DOGPILE CHECK: How can I respond to the LATEST statements? If the previous speaker made an accusation, how can I add value instead of just agreeing or parroting them? Can I bring up someone else, or challenge their reasoning?
-STEP 3 — INTENT & TARGET: Which intent best fits my statement? Who is the exact target_name (if any)?
-STEP 4 — STATEMENT DRAFT: Formulate your short response in {game_language}.
+Before writing, plan step by step in the corresponding fields:
+step_1_audit:
+  Look at the speaking clues and the deliberation history. Who is suspected? What defenses or deflections have been made?
+
+step_2_anti_repetition:
+  - Respond to the LATEST statements. If the previous speaker made an accusation, how can I add value?
+  - ANTI-REPETITION (CRITICAL): 
+    (1) Quote your EXACT last public_statement from the deliberation history. 
+    (2) Explain how your NEXT statement will be completely different in vocabulary and angle. If you repeat yourself or ask the same question again, you will be disqualified.
+
+step_3_intent_and_target:
+  Which intent best fits my statement? Who is the exact target_name (if any)?
+
+public_statement:
+  Formulate your short response in {game_language}.
 
 Now produce your JSON response."""
 
